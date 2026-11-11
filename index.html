@@ -235,17 +235,6 @@
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 전역 함수 연결
-    window.searchCardAffiliate = searchCardAffiliate;
-    window.addCpuInput = addCpuInput;
-    window.removeCpu = removeCpu;
-    window.updateCpuName = updateCpuName;
-    window.updateCpuScore = updateCpuScore;
-    window.searchRegionCode = searchRegionCode;
-    window.toggleAdminMode = toggleAdminMode;
-    window.submitQuestion = submitQuestion;
-    window.submitAnswer = submitAnswer;
-
     // Firebase 설정
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'corporate-solution-app';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -293,7 +282,6 @@
       { name: 'AMD Ryzen 5 5600G', score: 19800 },
       { name: 'Apple M1', score: 14200 },
       { name: 'Apple M2', score: 15400 },
-      // 1,000여 개 대용량 CPU 데이터베이스 확장 반영
       { name: 'Intel Core i9-14900KS', score: 61200 },
       { name: 'Intel Core i9-14900K', score: 59500 },
       { name: 'Intel Core i7-14700K', score: 54300 },
@@ -319,7 +307,6 @@
       { name: 'Intel Xeon Gold 6430', score: 41200 },
       { name: 'AMD EPYC 9654', score: 124500 },
       { name: 'AMD EPYC 9354', score: 68300 },
-      // 모바일 및 저전력 임베디드 다수 수록 (생략 없이 방대한 벤치마크 포함)
       { name: 'Intel Core Ultra 7 155H', score: 24500 },
       { name: 'Intel Core Ultra 5 125H', score: 22100 },
       { name: 'Apple M3 Max', score: 41000 },
@@ -329,16 +316,6 @@
 
     let cpuChart = null;
     let selectedCpus = [];
-    window.onload = function() {
-      const ctx = document.getElementById('cpuChart').getContext('2d');
-      cpuChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: ['Intel Celeron J6412'], datasets: [{ label: 'PassMark 점수', data: [3000], backgroundColor: 'rgba(37, 99, 235, 0.8)', borderRadius: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
-      });
-      renderCpuList();
-      initFirestoreListener();
-    };
 
     function renderCpuList() {
       const container = document.getElementById('cpuList');
@@ -347,14 +324,14 @@
       selectedCpus.forEach((item, index) => {
         html += `
           <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-[20px] p-5 shadow-sm flex flex-col justify-between relative space-y-3">
-            <button onclick="removeCpu(${index})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold px-2 py-1 text-sm">✕</button>
+            <button onclick="window.removeCpu(${index})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold px-2 py-1 text-sm">✕</button>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">CPU 모델명 직접 입력</label>
-              <input type="text" value="${item.name}" placeholder="예: Intel Core i5-13600K" oninput="updateCpuName(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" value="${item.name}" placeholder="예: Intel Core i5-13600K" oninput="window.updateCpuName(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">PassMark 성능 점수</label>
-              <input type="number" value="${item.score || ''}" placeholder="예: 41200" oninput="updateCpuScore(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="number" value="${item.score || ''}" placeholder="예: 41200" oninput="window.updateCpuScore(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
         `;
@@ -380,11 +357,10 @@
 
     function updateCpuName(index, nameVal) {
       selectedCpus[index].name = nameVal;
-      // 입력된 이름이 대용량 데이터베이스에 존재하면 점수 자동완성 제안
       const found = CPU_DATABASE.find(c => c.name.toLowerCase() === nameVal.toLowerCase().trim());
       if (found) {
         selectedCpus[index].score = found.score;
-        renderCpuList(); // 점수 필드 동기화 갱신
+        renderCpuList();
       }
       updateChart();
 
@@ -409,6 +385,23 @@
       cpuChart.data.datasets[0].data = [3000, ...selectedCpus.map(c => c.score || 0)];
       cpuChart.update();
     }
+
+    // 전역 함수 바인딩 (HTML에서 바로 호출 가능하도록 설정)
+    window.addCpuInput = addCpuInput;
+    window.removeCpu = removeCpu;
+    window.updateCpuName = updateCpuName;
+    window.updateCpuScore = updateCpuScore;
+
+    window.onload = function() {
+      const ctx = document.getElementById('cpuChart').getContext('2d');
+      cpuChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['Intel Celeron J6412'], datasets: [{ label: 'PassMark 점수', data: [3000], backgroundColor: 'rgba(37, 99, 235, 0.8)', borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+      });
+      renderCpuList();
+      initFirestoreListener();
+    };
 
     // 3. 지역번호 조회
     const REGION_DB = [
