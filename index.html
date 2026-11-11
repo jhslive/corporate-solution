@@ -35,7 +35,7 @@
   </style>
   <script>
     function switchTab(tabNum) {
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 2; i <= 4; i++) {
         const sec = document.getElementById(`program${i}`);
         const btn = document.getElementById(`tabBtn${i}`);
         if (sec) sec.classList.add('hidden');
@@ -54,13 +54,10 @@
 </head>
 <body class="bg-[#F5F5F7] text-gray-900 py-6 px-4 min-h-screen">
 
-  <!-- 네비게이션 탭 -->
+  <!-- 네비게이션 탭 (3개로 조정) -->
   <header class="sticky top-4 z-50 max-w-4xl mx-auto px-4 mb-6 w-full">
     <nav class="glass-nav rounded-full p-2 shadow-[0_8px_32px_rgba(0,0,0,0.06)] flex justify-around sm:justify-center sm:gap-2 overflow-x-auto">
-      <button onclick="switchTab(1)" id="tabBtn1" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all bg-blue-600 text-white shadow-sm whitespace-nowrap">
-        카드사 가맹
-      </button>
-      <button onclick="switchTab(2)" id="tabBtn2" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap">
+      <button onclick="switchTab(2)" id="tabBtn2" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all bg-blue-600 text-white shadow-sm whitespace-nowrap">
         CPU 비교
       </button>
       <button onclick="switchTab(3)" id="tabBtn3" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap">
@@ -74,23 +71,8 @@
 
   <main class="max-w-4xl mx-auto px-4 space-y-6 w-full">
 
-    <!-- PROGRAM 1: 카드사 가맹 (구글 앱스 스크립트 웹 앱 임베드) -->
-    <section id="program1" class="space-y-6">
-      <div class="px-2">
-        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
-          <span>💳</span> 카드사 가맹번호 조회
-        </h1>
-        <p class="text-gray-500 font-medium text-sm mt-1">등록된 사내 가맹 조회 시스템과 연동되어 실시간으로 표시됩니다.</p>
-      </div>
-      <div class="glass-card rounded-[24px] p-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div class="w-full h-[650px] rounded-[16px] overflow-hidden bg-white border border-gray-100">
-          <iframe src="https://script.google.com/a/macros/payhere.in/s/AKfycbwnTNJMCdM5UhqGl1Ys3QRDyq-7QCmRvfj-QjjfyetW1omXNocpzG2s-YF1m1myVJ2KFw/exec" class="w-full h-full border-0"></iframe>
-        </div>
-      </div>
-    </section>
-
     <!-- PROGRAM 2: CPU 성능 비교 -->
-    <section id="program2" class="space-y-6 hidden">
+    <section id="program2" class="space-y-6">
       <div class="px-2">
         <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
           <span>⚡</span> CPU 성능 비교
@@ -266,7 +248,7 @@
       console.log("Firebase init fallback mode");
     }
 
-    // 종합 CPU 데이터베이스
+// 저사양 / POS / 임베디드 / 넷북 / 미니 PC 중심 1000개+ 종합 CPU 데이터베이스 (PassMark 벤치마크 기준)
 const CPU_DATABASE = [
   // ==========================================
   // 1. 기준 CPU (Fixed Base)
@@ -576,7 +558,6 @@ const CPU_DATABASE = [
   { name: 'VIA Eden X2 U4200', score: 310 },
   { name: 'VIA QuadCore C4650', score: 850 }
 ];
-
     let cpuChart = null;
     let selectedCpus = [];
 
@@ -967,7 +948,6 @@ const CPU_DATABASE = [
           ? `<span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">답변완료</span>` 
           : `<span class="px-2.5 py-1 bg-gray-200 text-gray-600 rounded-full font-bold text-xs">답변대기</span>`;
 
-        // 테두리 색상 규칙 적용: CX이관=빨간색, 타팀이관=주황색, 일반답변완료=파란색, 기본=연한회색
         let cardBorderClass = 'border border-gray-100';
         if (item.transfer === 'cx') {
           cardBorderClass = 'border-2 border-red-500 shadow-md';
