@@ -186,7 +186,7 @@
           <p class="text-gray-500 font-medium text-sm mt-1">업무 중 궁금한 점을 간편하게 남겨주세요. 실시간으로 공유됩니다.</p>
         </div>
         <div>
-          <button onclick="toggleAdminLoginModal()" id="adminToggleBtn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[12px] text-xs transition-all">
+          <button onclick="handleAdminButtonClick()" id="adminToggleBtn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[12px] text-xs transition-all">
             관리자 로그인
           </button>
         </div>
@@ -197,7 +197,7 @@
         <div class="bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl space-y-4">
           <div class="flex justify-between items-center">
             <h3 class="text-lg font-extrabold text-gray-900">🔐 관리자 계정 로그인</h3>
-            <button onclick="toggleAdminLoginModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            <button onclick="closeAdminModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
           </div>
           <p class="text-xs text-gray-500">파이어베이스 인증된 관리자 계정 정보를 입력하세요.</p>
           <div class="space-y-3">
@@ -211,7 +211,7 @@
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button onclick="toggleAdminLoginModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 font-bold rounded-[12px] text-xs">취소</button>
+            <button onclick="closeAdminModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 font-bold rounded-[12px] text-xs">취소</button>
             <button onclick="performAdminLogin()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[12px] text-xs shadow-md">로그인</button>
           </div>
         </div>
@@ -550,8 +550,8 @@
       res.classList.remove('hidden');
     };
 
-    // 파이어베이스 관리자 로그인 관련 함수 (메모리 변수 기반 세션 유지 처리)
-    window.toggleAdminLoginModal = function() {
+    // 관리자 로그인 버튼 클릭 제어 (로그인 상태일 때는 로그아웃, 아닐 때는 모달 열기)
+    window.handleAdminButtonClick = function() {
       const modal = document.getElementById('adminModal');
       if (!modal) return;
       if (isAdmin) {
@@ -564,8 +564,13 @@
         renderQAList();
         alert("관리자 로그아웃 되었습니다.");
       } else {
-        modal.classList.toggle('hidden');
+        modal.classList.remove('hidden');
       }
+    };
+
+    window.closeAdminModal = function() {
+      const modal = document.getElementById('adminModal');
+      if (modal) modal.classList.add('hidden');
     };
 
     window.performAdminLogin = async function() {
@@ -575,13 +580,12 @@
 
       try {
         if (auth) {
-          // 파이어베이스 인증 수행 후 세션 유실 방지를 위해 변수 상태 우선 반영
           await signInWithEmailAndPassword(auth, email, password);
         }
         isAdmin = true;
         loggedInEmail = email;
         updateAdminUIState(true, email);
-        toggleAdminLoginModal();
+        closeAdminModal();
         renderQAList();
         alert("관리자 로그인 성공!");
       } catch (err) {
@@ -750,7 +754,8 @@
       faqArea.innerHTML = faqHtml;
     }
 
-    window.toggleAdminLoginModal = toggleAdminLoginModal;
+    window.handleAdminButtonClick = handleAdminButtonClick;
+    window.closeAdminModal = closeAdminModal;
     window.performAdminLogin = performAdminLogin;
     window.submitQuestion = submitQuestion;
     window.submitAnswer = submitAnswer;
