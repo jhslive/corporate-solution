@@ -248,7 +248,7 @@
   <!-- JavaScript 로직 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'corporate-solution-app';
@@ -273,20 +273,16 @@
       db = getFirestore(app);
       auth = getAuth(app);
       
-      // 세션 지속성 설정 (동기식 비동기 처리 안정을 통해 로그인 직후 로그아웃 현상 원천 차단)
-      setPersistence(auth, browserLocalPersistence).then(() => {
-        onAuthStateChanged(auth, (user) => {
-          if (user) {
-            isAdmin = true;
-            updateAdminUIState(true, user.email);
-          } else {
-            isAdmin = false;
-            updateAdminUIState(false);
-          }
-          renderQAList();
-        });
-      }).catch((error) => {
-        console.error("Persistence error:", error);
+      // 세션 충돌 방지를 위해 기본 LocalPersistence 상태에서 인증 리스너만 안정적으로 구동
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          isAdmin = true;
+          updateAdminUIState(true, user.email);
+        } else {
+          isAdmin = false;
+          updateAdminUIState(false);
+        }
+        renderQAList();
       });
 
     } catch (e) {
@@ -603,7 +599,6 @@ const CPU_DATABASE = [
   { name: 'VIA Eden X2 U4200', score: 310 },
   { name: 'VIA QuadCore C4650', score: 850 }
 ];
-
     let cpuChart = null;
     let selectedCpus = [];
 
