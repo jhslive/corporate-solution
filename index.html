@@ -89,7 +89,7 @@
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 제공해주신 파이어베이스 설정값 적용
+        // 파이어베이스 설정값 적용
         const firebaseConfig = {
             apiKey: "AIzaSyBuyJ1zzYcaR-tVtSq-rxuNhF2bSbpsxcc",
             authDomain: "payhere-corporate-solution.firebaseapp.com",
@@ -120,7 +120,7 @@
             } else {
                 authArea.innerHTML = `<button onclick="openLoginModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">관리자 로그인</button>`;
             }
-            loadQuestions(); // 질문 목록 렌더링 갱신
+            loadQuestions();
         });
 
         window.openLoginModal = () => document.getElementById('login-modal').classList.remove('hidden');
@@ -144,13 +144,315 @@
         };
 
         // CPU 데이터베이스 샘플
-        const CPU_DATABASE = [
-            { name: "Apple M1", score: 15000 },
-            { name: "Apple M2", score: 18000 },
-            { name: "AMD Ryzen 5 4500", score: 13000 },
-            { name: "AMD Ryzen 5 4600", score: 13500 },
-            { name: "Intel Core i5-13600K", score: 24000 }
-        ];
+       const CPU_DATABASE = [
+  // ==========================================
+  // 1. 기준 CPU (Fixed Base)
+  // ==========================================
+  { name: 'Intel Celeron J6412', score: 3000 },
+  { name: 'Intel Celeron J6413', score: 4100 },
+
+  // ==========================================
+  // 2. Intel Celeron J 시리즈 (산업용/데스크톱 라인)
+  // ==========================================
+  { name: 'Intel Celeron J1750', score: 550 },
+  { name: 'Intel Celeron J1800', score: 620 },
+  { name: 'Intel Celeron J1850', score: 580 },
+  { name: 'Intel Celeron J1900', score: 1150 },
+  { name: 'Intel Celeron J2850', score: 1100 },
+  { name: 'Intel Celeron J2900', score: 1250 },
+  { name: 'Intel Celeron J3060', score: 980 },
+  { name: 'Intel Celeron J3160', score: 1350 },
+  { name: 'Intel Celeron J3355', score: 1220 },
+  { name: 'Intel Celeron J3455', score: 2250 },
+  { name: 'Intel Celeron J4005', score: 1580 },
+  { name: 'Intel Celeron J4025', score: 1720 },
+  { name: 'Intel Celeron J4105', score: 2900 },
+  { name: 'Intel Celeron J4115', score: 2750 },
+  { name: 'Intel Celeron J4125', score: 3000 },
+  { name: 'Intel Celeron J6410', score: 2950 },
+
+  // ==========================================
+  // 3. Intel Celeron N 시리즈 (포스기/넷북/초저전력)
+  // ==========================================
+  { name: 'Intel Celeron N840', score: 450 },
+  { name: 'Intel Celeron N855', score: 480 },
+  { name: 'Intel Celeron N2805', score: 420 },
+  { name: 'Intel Celeron N2806', score: 480 },
+  { name: 'Intel Celeron N2807', score: 530 },
+  { name: 'Intel Celeron N2808', score: 550 },
+  { name: 'Intel Celeron N2810', score: 510 },
+  { name: 'Intel Celeron N2815', score: 540 },
+  { name: 'Intel Celeron N2820', score: 530 },
+  { name: 'Intel Celeron N2830', score: 580 },
+  { name: 'Intel Celeron N2840', score: 600 },
+  { name: 'Intel Celeron N2910', score: 910 },
+  { name: 'Intel Celeron N2920', score: 950 },
+  { name: 'Intel Celeron N2930', score: 980 },
+  { name: 'Intel Celeron N2940', score: 1020 },
+  { name: 'Intel Celeron N3000', score: 850 },
+  { name: 'Intel Celeron N3010', score: 870 },
+  { name: 'Intel Celeron N3050', score: 900 },
+  { name: 'Intel Celeron N3060', score: 980 },
+  { name: 'Intel Celeron N3150', score: 1320 },
+  { name: 'Intel Celeron N3160', score: 1400 },
+  { name: 'Intel Celeron N3350', score: 1100 },
+  { name: 'Intel Celeron N3450', score: 1900 },
+  { name: 'Intel Celeron N4000', score: 1400 },
+  { name: 'Intel Celeron N4000C', score: 1380 },
+  { name: 'Intel Celeron N4020', score: 1550 },
+  { name: 'Intel Celeron N4020C', score: 1540 },
+  { name: 'Intel Celeron N4100', score: 2450 },
+  { name: 'Intel Celeron N4120', score: 2520 },
+  { name: 'Intel Celeron N4500', score: 2000 },
+  { name: 'Intel Celeron N5095', score: 4010 },
+  { name: 'Intel Celeron N5095A', score: 4020 },
+  { name: 'Intel Celeron N5100', score: 3300 },
+  { name: 'Intel Celeron N5105', score: 4070 },
+
+  // ==========================================
+  // 4. Intel Processor N-시리즈 (최신 Alder Lake-N 저전력)
+  // ==========================================
+  { name: 'Intel Processor N50', score: 3800 },
+  { name: 'Intel Processor N95', score: 5400 },
+  { name: 'Intel Processor N97', score: 5800 },
+  { name: 'Intel Processor N100', score: 5600 },
+  { name: 'Intel Processor N200', score: 5200 },
+  { name: 'Intel Processor N300', score: 8500 },
+  { name: 'Intel Core i3-N300', score: 8400 },
+  { name: 'Intel Core i3-N305', score: 10200 },
+
+  // ==========================================
+  // 5. Intel Atom 시리즈 (구형 넷북/POS 전용 전체)
+  // ==========================================
+  { name: 'Intel Atom N270', score: 200 },
+  { name: 'Intel Atom N280', score: 220 },
+  { name: 'Intel Atom N450', score: 240 },
+  { name: 'Intel Atom N455', score: 250 },
+  { name: 'Intel Atom N470', score: 270 },
+  { name: 'Intel Atom N475', score: 280 },
+  { name: 'Intel Atom N550', score: 330 },
+  { name: 'Intel Atom N570', score: 350 },
+  { name: 'Intel Atom D410', score: 240 },
+  { name: 'Intel Atom D425', score: 260 },
+  { name: 'Intel Atom D510', score: 320 },
+  { name: 'Intel Atom D525', score: 380 },
+  { name: 'Intel Atom D2500', score: 340 },
+  { name: 'Intel Atom D2550', score: 390 },
+  { name: 'Intel Atom D2700', score: 430 },
+  { name: 'Intel Atom Z3735F', score: 510 },
+  { name: 'Intel Atom Z3735G', score: 500 },
+  { name: 'Intel Atom Z3740', score: 620 },
+  { name: 'Intel Atom Z3770', score: 710 },
+  { name: 'Intel Atom x5-Z8300', score: 720 },
+  { name: 'Intel Atom x5-Z8350', score: 750 },
+  { name: 'Intel Atom x5-Z8500', score: 920 },
+  { name: 'Intel Atom x7-Z8700', score: 1100 },
+  { name: 'Intel Atom x5-E3930', score: 980 },
+  { name: 'Intel Atom x5-E3940', score: 1850 },
+  { name: 'Intel Atom x7-E3950', score: 1950 },
+
+  // ==========================================
+  // 6. Intel Pentium N / J / G 시리즈 전체
+  // ==========================================
+  { name: 'Intel Pentium J2850', score: 1120 },
+  { name: 'Intel Pentium J2900', score: 1250 },
+  { name: 'Intel Pentium J3710', score: 1520 },
+  { name: 'Intel Pentium J4205', score: 2350 },
+  { name: 'Intel Pentium J5005', score: 3100 },
+  { name: 'Intel Pentium J5040', score: 3400 },
+  { name: 'Intel Pentium N3510', score: 1100 },
+  { name: 'Intel Pentium N3520', score: 1180 },
+  { name: 'Intel Pentium N3530', score: 1200 },
+  { name: 'Intel Pentium N3540', score: 1270 },
+  { name: 'Intel Pentium N3700', score: 1350 },
+  { name: 'Intel Pentium N3710', score: 1480 },
+  { name: 'Intel Pentium N4200', score: 2150 },
+  { name: 'Intel Pentium Silver N5000', score: 2600 },
+  { name: 'Intel Pentium Silver N5030', score: 2700 },
+  { name: 'Intel Pentium Silver N6000', score: 3150 },
+  { name: 'Intel Pentium Silver N6005', score: 5350 },
+  { name: 'Intel Pentium Gold 4415Y', score: 1600 },
+  { name: 'Intel Pentium Gold 4425Y', score: 1650 },
+  { name: 'Intel Pentium Gold 6500Y', score: 3050 },
+  { name: 'Intel Pentium Gold G5400', score: 3700 },
+  { name: 'Intel Pentium Gold G6400', score: 4150 },
+  { name: 'Intel Pentium Gold G7400', score: 6800 },
+
+  // ==========================================
+  // 7. Intel 모바일 / 저전력 Celeron B/U/G 시리즈
+  // ==========================================
+  { name: 'Intel Celeron B800', score: 820 },
+  { name: 'Intel Celeron B815', score: 850 },
+  { name: 'Intel Celeron B820', score: 890 },
+  { name: 'Intel Celeron 847', score: 580 },
+  { name: 'Intel Celeron 1007U', score: 780 },
+  { name: 'Intel Celeron 1037U', score: 950 },
+  { name: 'Intel Celeron 2955U', score: 920 },
+  { name: 'Intel Celeron 3205U', score: 1050 },
+  { name: 'Intel Celeron 3215U', score: 1120 },
+  { name: 'Intel Celeron 3755U', score: 1200 },
+  { name: 'Intel Celeron 3855U', score: 1280 },
+  { name: 'Intel Celeron 3865U', score: 1350 },
+  { name: 'Intel Celeron 3965U', score: 1420 },
+  { name: 'Intel Celeron 4205U', score: 1320 },
+  { name: 'Intel Celeron 5205U', score: 1410 },
+  { name: 'Intel Celeron 6305', score: 2200 },
+  { name: 'Intel Celeron G4900', score: 2400 },
+  { name: 'Intel Celeron G4920', score: 2500 },
+  { name: 'Intel Celeron G5900', score: 2700 },
+  { name: 'Intel Celeron G5905', score: 2850 },
+  { name: 'Intel Celeron G6900', score: 4400 },
+
+  // ==========================================
+  // 8. Intel Core i3 (초저전력 U/Y/M 및 풀 라인업)
+  // ==========================================
+  { name: 'Intel Core i3-2367M', score: 980 },
+  { name: 'Intel Core i3-3217U', score: 1350 },
+  { name: 'Intel Core i3-4005U', score: 1420 },
+  { name: 'Intel Core i3-4010U', score: 1510 },
+  { name: 'Intel Core i3-5005U', score: 2020 },
+  { name: 'Intel Core i3-5010U', score: 2150 },
+  { name: 'Intel Core i3-6006U', score: 2250 },
+  { name: 'Intel Core i3-6100U', score: 2600 },
+  { name: 'Intel Core i3-7100U', score: 2750 },
+  { name: 'Intel Core i3-8130U', score: 3600 },
+  { name: 'Intel Core i3-8145U', score: 3800 },
+  { name: 'Intel Core i3-10110U', score: 4050 },
+  { name: 'Intel Core i3-1115G4', score: 6150 },
+  { name: 'Intel Core i3-1215U', score: 11200 },
+  { name: 'Intel Core i3-1315U', score: 12400 },
+  { name: 'Intel Core i3-540', score: 1550 },
+  { name: 'Intel Core i3-2100', score: 1900 },
+  { name: 'Intel Core i3-3220', score: 2250 },
+  { name: 'Intel Core i3-4130', score: 3200 },
+  { name: 'Intel Core i3-6100', score: 4150 },
+  { name: 'Intel Core i3-7100', score: 4300 },
+  { name: 'Intel Core i3-8100', score: 6100 },
+  { name: 'Intel Core i3-9100', score: 6700 },
+  { name: 'Intel Core i3-10100', score: 8750 },
+  { name: 'Intel Core i3-10105', score: 8900 },
+  { name: 'Intel Core i3-12100', score: 13600 },
+  { name: 'Intel Core i3-13100', score: 14800 },
+  { name: 'Intel Core i3-14100', score: 15200 },
+
+  // ==========================================
+  // 9. Intel Core i5 (초저전력 U/Y 및 데스크톱 라인업)
+  // ==========================================
+  { name: 'Intel Core i5-3317U', score: 1650 },
+  { name: 'Intel Core i5-4200U', score: 2200 },
+  { name: 'Intel Core i5-5200U', score: 2500 },
+  { name: 'Intel Core i5-6200U', score: 3000 },
+  { name: 'Intel Core i5-7200U', score: 3400 },
+  { name: 'Intel Core i5-8250U', score: 5900 },
+  { name: 'Intel Core i5-8265U', score: 6100 },
+  { name: 'Intel Core i5-10210U', score: 6300 },
+  { name: 'Intel Core i5-1135G7', score: 9800 },
+  { name: 'Intel Core i5-1235U', score: 13500 },
+  { name: 'Intel Core i5-1335U', score: 15200 },
+  { name: 'Intel Core i5-750', score: 2300 },
+  { name: 'Intel Core i5-2400', score: 3800 },
+  { name: 'Intel Core i5-3470', score: 4600 },
+  { name: 'Intel Core i5-4570', score: 5100 },
+  { name: 'Intel Core i5-4590', score: 5300 },
+  { name: 'Intel Core i5-6500', score: 5600 },
+  { name: 'Intel Core i5-7500', score: 6000 },
+  { name: 'Intel Core i5-8400', score: 9200 },
+  { name: 'Intel Core i5-9400', score: 9600 },
+  { name: 'Intel Core i5-10400', score: 12300 },
+  { name: 'Intel Core i5-11400', score: 17100 },
+  { name: 'Intel Core i5-12400', score: 19400 },
+  { name: 'Intel Core i5-13400', score: 23900 },
+  { name: 'Intel Core i5-14400', score: 24500 },
+
+  // ==========================================
+  // 10. Intel Core i7 / i9 주요 라인업
+  // ==========================================
+  { name: 'Intel Core i7-2600', score: 5300 },
+  { name: 'Intel Core i7-3770', score: 6400 },
+  { name: 'Intel Core i7-4770', score: 7000 },
+  { name: 'Intel Core i7-6700', score: 8100 },
+  { name: 'Intel Core i7-7700', score: 8600 },
+  { name: 'Intel Core i7-8700', score: 13000 },
+  { name: 'Intel Core i7-10700', score: 16500 },
+  { name: 'Intel Core i7-12700', score: 31200 },
+  { name: 'Intel Core i7-13700K', score: 46200 },
+  { name: 'Intel Core i7-14700K', score: 53000 },
+  { name: 'Intel Core i9-9900K', score: 18500 },
+  { name: 'Intel Core i9-10900K', score: 23500 },
+  { name: 'Intel Core i9-12900K', score: 41000 },
+  { name: 'Intel Core i9-13900K', score: 59100 },
+  { name: 'Intel Core i9-14900K', score: 60500 },
+
+  // ==========================================
+  // 11. 구형 레거시 CPU (Core 2 Duo / Quad / Pentium 4)
+  // ==========================================
+  { name: 'Intel Pentium 4 3.00GHz', score: 180 },
+  { name: 'Intel Core 2 Duo E4500', score: 780 },
+  { name: 'Intel Core 2 Duo E6600', score: 920 },
+  { name: 'Intel Core 2 Duo E7500', score: 1150 },
+  { name: 'Intel Core 2 Duo E8400', score: 1250 },
+  { name: 'Intel Core 2 Quad Q6600', score: 1750 },
+  { name: 'Intel Core 2 Quad Q8300', score: 1900 },
+  { name: 'Intel Core 2 Quad Q9550', score: 2300 },
+
+  // ==========================================
+  // 12. AMD E-시리즈 / 임베디드 / Athlon 저전력
+  // ==========================================
+  { name: 'AMD E-350', score: 380 },
+  { name: 'AMD E-450', score: 420 },
+  { name: 'AMD E1-1200', score: 390 },
+  { name: 'AMD E1-2100', score: 430 },
+  { name: 'AMD E1-2500', score: 510 },
+  { name: 'AMD E2-1800', score: 480 },
+  { name: 'AMD E2-3000M', score: 520 },
+  { name: 'AMD E2-9000', score: 910 },
+  { name: 'AMD A4-1200', score: 410 },
+  { name: 'AMD A4-5000', score: 1220 },
+  { name: 'AMD A6-5200', score: 1550 },
+  { name: 'AMD A8-6410', score: 1720 },
+  { name: 'AMD Athlon 200GE', score: 4100 },
+  { name: 'AMD Athlon 3000G', score: 4400 },
+  { name: 'AMD Athlon Silver 3050U', score: 2900 },
+  { name: 'AMD Athlon Gold 3150U', score: 3800 },
+
+  // ==========================================
+  // 13. AMD Ryzen 풀 라인업 (저전력~고성능)
+  // ==========================================
+  { name: 'AMD Ryzen 3 2200G', score: 6800 },
+  { name: 'AMD Ryzen 3 3200G', score: 7150 },
+  { name: 'AMD Ryzen 3 3200U', score: 3850 },
+  { name: 'AMD Ryzen 3 3250U', score: 3900 },
+  { name: 'AMD Ryzen 3 4300U', score: 7600 },
+  { name: 'AMD Ryzen 3 5300U', score: 9600 },
+  { name: 'AMD Ryzen 5 2600', score: 13200 },
+  { name: 'AMD Ryzen 5 3500U', score: 6900 },
+  { name: 'AMD Ryzen 5 3600', score: 17800 },
+  { name: 'AMD Ryzen 5 4500U', score: 11000 },
+  { name: 'AMD Ryzen 5 4600G', score: 15800 },
+  { name: 'AMD Ryzen 5 5500U', score: 13100 },
+  { name: 'AMD Ryzen 5 5600G', score: 19800 },
+  { name: 'AMD Ryzen 5 5600X', score: 22100 },
+  { name: 'AMD Ryzen 5 7600X', score: 28500 },
+  { name: 'AMD Ryzen 7 3700X', score: 22500 },
+  { name: 'AMD Ryzen 7 5700G', score: 24600 },
+  { name: 'AMD Ryzen 7 5800X', score: 28000 },
+  { name: 'AMD Ryzen 7 7800X3D', score: 34300 },
+  { name: 'AMD Ryzen 9 5900X', score: 39000 },
+  { name: 'AMD Ryzen 9 7950X', score: 63000 },
+
+  // ==========================================
+  // 14. Apple Silicon 및 기타 산업용 VIA
+  // ==========================================
+  { name: 'Apple M1', score: 14200 },
+  { name: 'Apple M1 Pro', score: 23500 },
+  { name: 'Apple M2', score: 15400 },
+  { name: 'Apple M2 Pro', score: 26500 },
+  { name: 'Apple M3', score: 19100 },
+  { name: 'Apple M3 Pro', score: 28000 },
+  { name: 'VIA Nano U2250', score: 180 },
+  { name: 'VIA Eden X2 U4200', score: 310 },
+  { name: 'VIA QuadCore C4650', score: 850 }
+];
 
         // 탭 전환 함수
         window.switchTab = (tabName) => {
@@ -199,7 +501,7 @@
             }
         };
 
-        // 가맹점 조회 로직 (카드사별 개별 가맹번호/날짜 표시)
+        // 가맹점 조회 로직 (각 가맹번호별 승인/해지 상태 표시)
         window.searchAffiliate = () => {
             const bizNo = document.getElementById('biz-input').value.trim();
             const resDiv = document.getElementById('affiliate-result');
@@ -207,21 +509,26 @@
                 alert("사업자등록번호를 입력해주세요.");
                 return;
             }
-            // 더미 9개 카드사 데이터 렌더링 예시
             const cardCompanies = ["신한카드", "삼성카드", "KB국민카드", "현대카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
             resDiv.innerHTML = cardCompanies.map((card, idx) => `
-                <div class="p-4 border rounded-lg bg-gray-50">
+                <div class="p-4 border rounded-lg bg-gray-50 shadow-sm">
                     <h3 class="font-bold text-gray-800 mb-2">${card}</h3>
-                    <div class="text-sm space-y-1 text-gray-600">
-                        <p>가맹번호: 1234567${idx}</p>
-                        <p class="text-green-600 font-medium">승인: 2024-01-15</p>
-                        ${idx % 2 === 0 ? '<p class="text-red-500 font-medium">해지: 2025-06-30</p>' : '<p class="text-blue-500">상태: 정상 가맹 중</p>'}
+                    <div class="text-sm space-y-2 text-gray-600">
+                        <div class="p-2 bg-white rounded border">
+                            <p class="font-medium text-gray-700">가맹번호: 1234567${idx}-1</p>
+                            <p class="text-green-600 text-xs">승인일: 2023-05-10</p>
+                        </div>
+                        <div class="p-2 bg-white rounded border">
+                            <p class="font-medium text-gray-700">가맹번호: 1234567${idx}-2</p>
+                            <p class="text-green-600 text-xs">승인일: 2024-01-15</p>
+                            <p class="text-red-500 text-xs font-medium">해지일: 2025-06-30</p>
+                        </div>
                     </div>
                 </div>
             `).join('');
         };
 
-        // Q&A 질문 등록 (Firestore 연동)
+        // Q&A 질문 등록
         window.submitQuestion = async () => {
             const content = document.getElementById('qna-content').value.trim();
             if (!content) {
@@ -232,7 +539,7 @@
                 await addDoc(collection(db, "questions"), {
                     content,
                     answer: "",
-                    transferType: "", // "cx" 또는 "other"
+                    transferType: "",
                     createdAt: serverTimestamp()
                 });
                 document.getElementById('qna-content').value = "";
@@ -253,7 +560,6 @@
                     const isAnswered = !!data.answer;
                     const transferType = data.transferType || "";
                     
-                    // 테두리 색상 결정 (이관 선택시 빨간색, 아니면 기본)
                     const borderColor = transferType ? "border-red-500 border-2" : "border-gray-200";
                     const statusBadge = isAnswered 
                         ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">답변완료</span>' 
@@ -267,10 +573,8 @@
                             </div>
                             <p class="text-gray-800 mb-3 whitespace-pre-wrap">${data.content}</p>
                             
-                            <!-- 답변 표시 영역 -->
                             ${isAnswered ? `<div class="p-3 bg-green-50 rounded-lg text-sm text-green-900 mb-3"><span class="font-bold">답변:</span> ${data.answer}</div>` : ''}
 
-                            <!-- 관리자 전용 답변 및 이관 설정 영역 -->
                             ${isAdmin ? `
                                 <div class="mt-3 pt-3 border-t border-gray-100 space-y-2">
                                     <div class="flex gap-2">
@@ -310,7 +614,6 @@
             }
         };
 
-        // 초기 로드 시 질문 목록 불러오기 시작
         loadQuestions();
     </script>
 </body>
