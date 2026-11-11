@@ -610,7 +610,18 @@
 
     function updateCpuName(index, nameVal) {
       selectedCpus[index].name = nameVal;
-      const found = CPU_DATABASE.find(c => c.name.toLowerCase() === nameVal.toLowerCase().trim());
+      
+      // 검색어 정규화 (공백, 하이픈 제거 및 소문자 변환)
+      const cleanInput = nameVal.toLowerCase().replace(/[\s\-_]/g, '');
+      
+      let found = null;
+      if (cleanInput.length > 0) {
+        found = CPU_DATABASE.find(c => {
+          const cleanDbName = c.name.toLowerCase().replace(/[\s\-_]/g, '');
+          return cleanDbName.includes(cleanInput) || cleanInput.includes(cleanDbName);
+        });
+      }
+
       if (found) {
         selectedCpus[index].score = found.score;
         renderCpuList();
