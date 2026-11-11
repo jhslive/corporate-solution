@@ -273,9 +273,8 @@
       db = getFirestore(app);
       auth = getAuth(app);
       
-      // 세션 지속성 설정 (로그인 직후 로그아웃 현상 방지)
+      // 세션 지속성 설정 (동기식 비동기 처리 안정을 통해 로그인 직후 로그아웃 현상 원천 차단)
       setPersistence(auth, browserLocalPersistence).then(() => {
-        // 파이어베이스 인증 상태 감지 리스너
         onAuthStateChanged(auth, (user) => {
           if (user) {
             isAdmin = true;
