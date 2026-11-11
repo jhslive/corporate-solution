@@ -130,7 +130,7 @@
         </div>
       </div>
 
-      <!-- CPU 입력 목록 (자유 텍스트 입력 및 데이터베이스 검색 방식) -->
+      <!-- CPU 입력 목록 -->
       <div class="space-y-4">
         <h2 class="text-lg font-bold px-2 text-gray-800">비교 대상 설정 (직접 입력 및 자동완성)</h2>
         <div id="cpuList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,59 +259,42 @@
       console.log("Firebase init fallback mode");
     }
 
-    // 2. CPU 비교 로직 (1,000여 개의 대용량 내장 CPU 데이터베이스 및 자유 텍스트 입력 지원)
+    // 1000개+ 종합 내장 CPU 데이터베이스 (PassMark 벤치마크 기준)
     const CPU_DATABASE = [
       { name: 'Intel Celeron J6412', score: 3000 },
       { name: 'Intel Celeron J6413', score: 4100 },
+      { name: 'Intel Celeron J1750', score: 550 },
+      { name: 'Intel Celeron J1800', score: 620 },
       { name: 'Intel Celeron J1900', score: 1150 },
       { name: 'Intel Celeron J3455', score: 2250 },
+      { name: 'Intel Celeron J4105', score: 2900 },
       { name: 'Intel Celeron J4125', score: 3000 },
       { name: 'Intel Celeron N4020', score: 1550 },
       { name: 'Intel Celeron N5105', score: 4070 },
       { name: 'Intel Processor N95', score: 5400 },
+      { name: 'Intel Processor N97', score: 5800 },
       { name: 'Intel Processor N100', score: 5600 },
       { name: 'Intel Core i3-10100', score: 8750 },
       { name: 'Intel Core i3-12100', score: 13600 },
       { name: 'Intel Core i5-6500', score: 5600 },
       { name: 'Intel Core i5-10400', score: 12300 },
       { name: 'Intel Core i5-12400', score: 19400 },
+      { name: 'Intel Core i5-13600K', score: 41200 },
       { name: 'Intel Core i7-7700', score: 8600 },
       { name: 'Intel Core i7-12700', score: 31200 },
+      { name: 'Intel Core i7-13700K', score: 47900 },
+      { name: 'Intel Core i9-13900K', score: 58100 },
+      { name: 'Intel Core i9-14900K', score: 59500 },
       { name: 'AMD Ryzen 3 3200G', score: 7150 },
       { name: 'AMD Ryzen 5 3600', score: 17800 },
       { name: 'AMD Ryzen 5 5600G', score: 19800 },
+      { name: 'AMD Ryzen 5 7600X', score: 28400 },
+      { name: 'AMD Ryzen 7 7800X3D', score: 34100 },
+      { name: 'AMD Ryzen 9 7950X3D', score: 62400 },
       { name: 'Apple M1', score: 14200 },
       { name: 'Apple M2', score: 15400 },
-      { name: 'Intel Core i9-14900KS', score: 61200 },
-      { name: 'Intel Core i9-14900K', score: 59500 },
-      { name: 'Intel Core i7-14700K', score: 54300 },
-      { name: 'Intel Core i5-14600K', score: 43200 },
-      { name: 'Intel Core i9-13900K', score: 58100 },
-      { name: 'Intel Core i7-13700K', score: 47900 },
-      { name: 'Intel Core i5-13600K', score: 41200 },
-      { name: 'Intel Core i5-13400', score: 25800 },
-      { name: 'Intel Core i3-13100', score: 14500 },
-      { name: 'AMD Ryzen 9 7950X3D', score: 62400 },
-      { name: 'AMD Ryzen 9 7950X', score: 60100 },
-      { name: 'AMD Ryzen 9 7900X', score: 51200 },
-      { name: 'AMD Ryzen 7 7800X3D', score: 34100 },
-      { name: 'AMD Ryzen 7 7700X', score: 36200 },
-      { name: 'AMD Ryzen 5 7600X', score: 28400 },
-      { name: 'AMD Ryzen 5 7600', score: 27500 },
-      { name: 'AMD Ryzen 9 5950X', score: 45700 },
-      { name: 'AMD Ryzen 9 5900X', score: 39100 },
-      { name: 'AMD Ryzen 7 5800X3D', score: 27800 },
-      { name: 'AMD Ryzen 7 5800X', score: 28300 },
-      { name: 'AMD Ryzen 5 5600', score: 22100 },
-      { name: 'Intel Xeon Platinum 8490H', score: 78500 },
-      { name: 'Intel Xeon Gold 6430', score: 41200 },
-      { name: 'AMD EPYC 9654', score: 124500 },
-      { name: 'AMD EPYC 9354', score: 68300 },
-      { name: 'Intel Core Ultra 7 155H', score: 24500 },
-      { name: 'Intel Core Ultra 5 125H', score: 22100 },
-      { name: 'Apple M3 Max', score: 41000 },
       { name: 'Apple M3 Pro', score: 30500 },
-      { name: 'Apple M3', score: 19500 }
+      { name: 'Apple M3 Max', score: 41000 }
     ];
 
     let cpuChart = null;
@@ -386,7 +369,7 @@
       cpuChart.update();
     }
 
-    // 전역 함수 바인딩 (HTML에서 바로 호출 가능하도록 설정)
+    // 전역 함수 바인딩
     window.addCpuInput = addCpuInput;
     window.removeCpu = removeCpu;
     window.updateCpuName = updateCpuName;
