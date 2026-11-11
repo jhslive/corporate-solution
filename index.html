@@ -253,8 +253,8 @@
       console.log("Firebase init fallback mode");
     }
 
-    // 종합 CPU 데이터베이스 (보내주신 데이터 반영)
-    // 저사양 / POS / 임베디드 / 넷북 / 미니 PC 중심 1000개+ 종합 CPU 데이터베이스 (PassMark 벤치마크 기준)
+    // 종합 CPU 데이터베이스 (강력한 매칭을 위해 대소문자 및 공백 처리 지원)
+   // 저사양 / POS / 임베디드 / 넷북 / 미니 PC 중심 1000개+ 종합 CPU 데이터베이스 (PassMark 벤치마크 기준)
 const CPU_DATABASE = [
   // ==========================================
   // 1. 기준 CPU (Fixed Base)
@@ -564,6 +564,7 @@ const CPU_DATABASE = [
   { name: 'VIA Eden X2 U4200', score: 310 },
   { name: 'VIA QuadCore C4650', score: 850 }
 ];
+
     let cpuChart = null;
     let selectedCpus = [];
 
@@ -576,13 +577,18 @@ const CPU_DATABASE = [
         html += `
           <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-[20px] p-5 shadow-sm flex flex-col justify-between relative space-y-3">
             <button onclick="window.removeCpu(${index})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold px-2 py-1 text-sm">✕</button>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">CPU 모델명 입력</label>
-              <input type="text" value="${item.name}" placeholder="예: Intel Core i5-13600K" oninput="window.updateCpuName(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="relative">
+              <label class="block text-xs font-bold text-gray-500 mb-1">CPU 모델명 입력 (엔터 또는 목록 선택)</label>
+              <input type="text" id="cpuNameInput_${index}" value="${item.name}" placeholder="예: M1, i5-13600K" 
+                oninput="window.onCpuInputTyped(${index}, this.value)" 
+                onkeypress="if(event.key==='Enter') window.commitCpuSearch(${index}, this.value)"
+                class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+              <!-- 자동완성 추천 목록 -->
+              <div id="cpuSuggestions_${index}" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-[12px] shadow-lg max-h-48 overflow-y-auto z-40 hidden"></div>
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">PassMark 성능 점수</label>
-              <input type="number" value="${item.score || ''}" placeholder="점수 자동입력 또는 직접입력" oninput="window.updateCpuScore(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="number" id="cpuScoreInput_${index}" value="${item.score || ''}" placeholder="점수" oninput="window.updateCpuScore(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
         `;
@@ -610,24 +616,6 @@ const CPU_DATABASE = [
 
     function updateCpuName(index, nameVal) {
       selectedCpus[index].name = nameVal;
-      
-      // 검색어 정규화 (공백, 하이픈 제거 및 소문자 변환)
-      const cleanInput = nameVal.toLowerCase().replace(/[\s\-_]/g, '');
-      
-      let found = null;
-      if (cleanInput.length > 0) {
-        found = CPU_DATABASE.find(c => {
-          const cleanDbName = c.name.toLowerCase().replace(/[\s\-_]/g, '');
-          return cleanDbName.includes(cleanInput) || cleanInput.includes(cleanDbName);
-        });
-      }
-
-      if (found) {
-        // 일치하는 정식 모델명과 점수를 자동 반영합니다.
-        selectedCpus[index].name = found.name;
-        selectedCpus[index].score = found.score;
-        renderCpuList();
-      }
       updateChart();
 
       if (nameVal.toLowerCase().includes('dojin')) {
@@ -640,6 +628,66 @@ const CPU_DATABASE = [
             popup.classList.add('hidden');
           }, 4000);
         }
+      }
+    }
+
+    function onCpuInputTyped(index, queryVal) {
+      selectedCpus[index].name = queryVal;
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (!suggBox) return;
+
+      const q = queryVal.trim().toLowerCase();
+      if (q.length === 0) {
+        suggBox.classList.add('hidden');
+        suggBox.innerHTML = '';
+        return;
+      }
+
+      // 부분 일치하는 CPU 목록 최대 10개 추출
+      const matches = CPU_DATABASE.filter(c => c.name.toLowerCase().includes(q)).slice(0, 10);
+      if (matches.length > 0) {
+        let listHtml = '';
+        matches.forEach(m => {
+          listHtml += `<div onclick="window.selectCpuSuggestion(${index}, '${m.name.replace(/'/g, "\\'")}', ${m.score})" class="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs font-bold text-gray-700 flex justify-between"><span>${m.name}</span><span class="text-blue-600">${m.score}점</span></div>`;
+        });
+        suggBox.innerHTML = listHtml;
+        suggBox.classList.remove('hidden');
+      } else {
+        suggBox.classList.add('hidden');
+        suggBox.innerHTML = '';
+      }
+    }
+
+    function selectCpuSuggestion(index, fullName, score) {
+      selectedCpus[index].name = fullName;
+      selectedCpus[index].score = score;
+
+      const nameField = document.getElementById(`cpuNameInput_${index}`);
+      if (nameField) nameField.value = fullName;
+      const scoreField = document.getElementById(`cpuScoreInput_${index}`);
+      if (scoreField) scoreField.value = score;
+
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (suggBox) suggBox.classList.add('hidden');
+
+      updateChart();
+    }
+
+    function commitCpuSearch(index, queryVal) {
+      const q = queryVal.trim().toLowerCase();
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (suggBox) suggBox.classList.add('hidden');
+
+      if (!q) return;
+      const exactMatch = CPU_DATABASE.find(c => c.name.toLowerCase() === q || c.name.toLowerCase().includes(q));
+      if (exactMatch) {
+        selectedCpus[index].name = exactMatch.name;
+        selectedCpus[index].score = exactMatch.score;
+        const nameField = document.getElementById(`cpuNameInput_${index}`);
+        if (nameField) nameField.value = exactMatch.name;
+        const scoreField = document.getElementById(`cpuScoreInput_${index}`);
+        if (scoreField) scoreField.value = exactMatch.score;
+        updateChart();
       }
     }
 
@@ -658,6 +706,9 @@ const CPU_DATABASE = [
     window.addCpuInput = addCpuInput;
     window.removeCpu = removeCpu;
     window.updateCpuName = updateCpuName;
+    window.onCpuInputTyped = onCpuInputTyped;
+    window.selectCpuSuggestion = selectCpuSuggestion;
+    window.commitCpuSearch = commitCpuSearch;
     window.updateCpuScore = updateCpuScore;
 
     window.onload = function() {
@@ -690,9 +741,69 @@ const CPU_DATABASE = [
         const seed = Math.abs(hash + idx * 17) % 100;
         let active = seed >= 30;
         if (active) count++;
-        html += `<div class="bg-white/70 border border-gray-100 p-4 rounded-[16px] flex justify-between items-center"><div class="font-bold text-gray-800">${card}</div><div><span class="px-2.5 py-1 ${active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'} rounded-full text-xs font-bold">${active ? '가맹 승인' : '미가맹'}</span></div></div>`;
+
+        // 가맹번호 생성 모사 (복수 가맹번호 지원: 각 가맹번호별 승인 및 해지 상태를 독립적으로 부여)
+        const affNo1 = String(Math.abs(hash * (idx + 3)) % 90000000 + 10000000);
+        const affNo2 = (seed % 3 === 0) ? String(Math.abs(hash * (idx + 7)) % 90000000 + 10000000) : null;
+
+        const approvalYear1 = 2018 + (seed % 5);
+        const approvalMonth1 = String((seed % 12) + 1).padStart(2, '0');
+        const approvalDay1 = String((seed % 28) + 1).padStart(2, '0');
+        const approvalDate1 = `${approvalYear1}-${approvalMonth1}-${approvalDay1}`;
+
+        let detailsHtml = '';
+
+        if (!affNo2) {
+          // 단일 가맹번호인 경우
+          if (active) {
+            detailsHtml = `
+              <div class="mt-2 space-y-1 text-xs text-gray-600 bg-white/60 p-2.5 rounded-[12px]">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-bold text-[10px]">승인</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span class="font-medium text-gray-700">${approvalDate1}</span></div>
+              </div>
+            `;
+          } else {
+            const termYear = approvalYear1 + 2;
+            detailsHtml = `
+              <div class="mt-2 space-y-1 text-xs text-gray-600 bg-white/60 p-2.5 rounded-[12px]">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-500 line-through">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-bold text-[10px]">해지</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span>${approvalDate1}</span></div>
+                <div class="flex justify-between text-red-500 font-medium"><span>해지일자:</span> <span>${termYear}-${approvalMonth1}-${approvalDay1}</span></div>
+              </div>
+            `;
+          }
+        } else {
+          // 복수 가맹번호인 경우 (예: 하나는 승인, 다른 하나는 해지 상태인 경우 등 각각 분리 표기)
+          const approvalYear2 = approvalYear1 + 1;
+          const approvalDate2 = `${approvalYear2}-${approvalMonth1}-${approvalDay1}`;
+          
+          detailsHtml = `
+            <div class="mt-2 space-y-2 text-xs text-gray-600">
+              <!-- 첫 번째 가맹번호 (승인) -->
+              <div class="bg-white/60 p-2.5 rounded-[12px] space-y-1 border border-green-100">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-bold text-[10px]">승인</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span class="font-medium text-gray-700">${approvalDate1}</span></div>
+              </div>
+              <!-- 두 번째 가맹번호 (해지 또는 추가 승인) -->
+              <div class="bg-white/60 p-2.5 rounded-[12px] space-y-1 border border-red-100">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-500 line-through">가맹번호: ${affNo2}</span> <span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-bold text-[10px]">해지</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span>${approvalDate2}</span></div>
+                <div class="flex justify-between text-red-500 font-medium"><span>해지일자:</span> <span>${approvalYear2 + 1}-${approvalMonth1}-${approvalDay1}</span></div>
+              </div>
+            </div>
+          `;
+        }
+
+        html += `
+          <div class="bg-white/80 border border-gray-100 p-4 rounded-[18px] shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-extrabold text-gray-900">${card}</span>
+            </div>
+            ${detailsHtml}
+          </div>
+        `;
       });
-      resultArea.innerHTML = `<div class="bg-blue-50 p-4 rounded-[16px] font-bold text-blue-900 text-sm">총 9개 중 ${count}개 카드사 가맹 확인</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${html}</div>`;
+      resultArea.innerHTML = `<div class="bg-blue-50 p-4 rounded-[16px] font-bold text-blue-900 text-sm">사업자번호 [${bizNo}] 카드사 가맹번호 및 상태 상세 내역</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${html}</div>`;
       resultArea.classList.remove('hidden');
     };
 
