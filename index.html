@@ -251,8 +251,6 @@
     import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'corporate-solution-app';
-    
     // 파이어베이스 설정값 적용
     const firebaseConfig = {
       apiKey: "AIzaSyBuyJ1zzYcaR-tVtSq-rxuNhF2bSbpsxcc",
@@ -550,7 +548,7 @@
       res.classList.remove('hidden');
     };
 
-    // 관리자 로그인 버튼 클릭 제어 (로그인 상태일 때는 로그아웃, 아닐 때는 모달 열기)
+    // 관리자 로그인 버튼 클릭 제어
     window.handleAdminButtonClick = function() {
       const modal = document.getElementById('adminModal');
       if (!modal) return;
@@ -605,6 +603,7 @@
       }
     }
 
+    // 질문 등록 (최상위 "questions" 컬렉션 사용)
     window.submitQuestion = async function() {
       const content = document.getElementById('qContent').value.trim();
       if (!content) { alert('질문 내용을 입력해주세요.'); return; }
@@ -619,17 +618,18 @@
 
       try {
         if (db) {
-          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), newQ);
+          await addDoc(collection(db, 'questions'), newQ);
         } else {
           allQuestions.push({ id: Date.now().toString(), ...newQ });
           renderQAList();
         }
         document.getElementById('qContent').value = '';
       } catch (err) {
-        alert('등록 중 오류가 발생했습니다.');
+        alert('등록 중 오류가 발생했습니다: ' + err.message);
       }
     };
 
+    // 답변 등록
     window.submitAnswer = async function(docId) {
       const ansInput = document.getElementById(`ansInput_${docId}`);
       if (!ansInput) return;
@@ -637,30 +637,33 @@
       if (!ansText) { alert('답변 내용을 입력하세요.'); return; }
       try {
         if (db) {
-          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', docId), { answer: ansText });
+          await updateDoc(doc(db, 'questions', docId), { answer: ansText });
+          alert("답변이 등록되었습니다.");
         }
       } catch (e) {
-        alert('답변 저장 실패');
+        alert('답변 저장 실패: ' + e.message);
       }
     };
 
+    // 이관 설정
     window.setTransferType = async function(docId, typeVal) {
       try {
         if (db) {
-          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', docId), { transfer: typeVal });
+          await updateDoc(doc(db, 'questions', docId), { transfer: typeVal });
         }
       } catch (e) {
-        alert('이관 설정 실패');
+        alert('이관 설정 실패: ' + e.message);
       }
     };
 
+    // Firestore 실시간 리스너 (최상위 "questions" 컬렉션 연동)
     function initFirestoreListener() {
       if (!db) {
         renderQAList();
         renderFAQ();
         return;
       }
-      onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snapshot) => {
+      onSnapshot(collection(db, 'questions'), (snapshot) => {
         allQuestions = [];
         snapshot.forEach(docSnap => {
           allQuestions.push({ id: docSnap.id, ...docSnap.data() });
