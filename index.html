@@ -1,620 +1,769 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사내 통합 솔루션</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사내 통합 조회 및 비교 솔루션</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    /* 리퀴드 글래스 스타일 (Liquid Glass / Glassmorphism) */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -55%) scale(0.95); }
+    }
+    .easter-egg-active {
+      animation: fadeInOut 4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+  <script>
+    function switchTab(tabNum) {
+      for (let i = 1; i <= 4; i++) {
+        const sec = document.getElementById(`program${i}`);
+        const btn = document.getElementById(`tabBtn${i}`);
+        if (sec) sec.classList.add('hidden');
+        if (btn) {
+          btn.className = "px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap";
+        }
+      }
+      const activeSec = document.getElementById(`program${tabNum}`);
+      const activeBtn = document.getElementById(`tabBtn${tabNum}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.className = "px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all bg-blue-600 text-white shadow-sm whitespace-nowrap";
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
-    <!-- 네비게이션 바 -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 class="text-xl font-bold text-blue-600">사내 통합 솔루션</h1>
-            <nav class="flex space-x-4">
-                <button onclick="switchTab('cpu')" id="btn-cpu" class="px-3 py-2 rounded-md font-medium text-blue-600 bg-blue-50">CPU 검색</button>
-                <button onclick="switchTab('affiliate')" id="btn-affiliate" class="px-3 py-2 rounded-md font-medium text-gray-600 hover:bg-gray-100">가맹점 조회</button>
-                <button onclick="switchTab('qna')" id="btn-qna" class="px-3 py-2 rounded-md font-medium text-gray-600 hover:bg-gray-100">질문하기</button>
-            </nav>
+<body class="bg-[#F5F5F7] text-gray-900 py-6 px-4 min-h-screen">
+
+  <!-- 네비게이션 탭 -->
+  <header class="sticky top-4 z-50 max-w-4xl mx-auto px-4 mb-6">
+    <nav class="glass-nav rounded-full p-2 shadow-[0_8px_32px_rgba(0,0,0,0.06)] flex justify-around sm:justify-center sm:gap-2 overflow-x-auto">
+      <button onclick="switchTab(1)" id="tabBtn1" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all bg-blue-600 text-white shadow-sm whitespace-nowrap">
+        카드사 가맹
+      </button>
+      <button onclick="switchTab(2)" id="tabBtn2" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap">
+        CPU 비교
+      </button>
+      <button onclick="switchTab(3)" id="tabBtn3" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap">
+        지역번호
+      </button>
+      <button onclick="switchTab(4)" id="tabBtn4" class="px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all text-gray-600 hover:text-gray-900 whitespace-nowrap">
+        질문하기
+      </button>
+    </nav>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 space-y-6">
+
+    <!-- PROGRAM 1: 카드사 가맹번호 조회 -->
+    <section id="program1" class="space-y-6">
+      <div class="px-2">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+          <span>💳</span> 카드사 가맹번호 조회
+        </h1>
+        <p class="text-gray-500 font-medium text-sm mt-1">사업자 등록번호로 국내 9개 카드사 가맹 현황을 일괄 조회합니다.</p>
+      </div>
+      <div class="glass-card rounded-[24px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] space-y-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="text" id="bizNoInput" placeholder="사업자등록번호 '123-45-67890' 입력" 
+            class="flex-1 px-4 py-3.5 rounded-[16px] bg-white/80 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-800 placeholder-gray-400">
+          <button onclick="searchCardAffiliate()" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[16px] transition-all shadow-md">
+            조회하기
+          </button>
         </div>
-    </header>
+        <div id="cardResultArea" class="hidden pt-4 border-t border-gray-100 space-y-4"></div>
+      </div>
+    </section>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- 1. CPU 검색 탭 -->
-        <section id="tab-cpu" class="space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-lg font-semibold mb-4">CPU 데이터베이스 검색</h2>
-                <div class="relative max-w-xl">
-                    <div class="flex gap-2">
-                        <input type="text" id="cpu-input" placeholder="CPU 모델명을 입력하세요 (예: Apple M1, 라이젠 5 4500)" class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
-                        <button onclick="searchCpu()" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">검색</button>
-                    </div>
-                    <!-- 자동완성 드롭다운 -->
-                    <div id="cpu-suggestions" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden z-10 max-h-60 overflow-y-auto"></div>
-                </div>
-                <div id="cpu-result" class="mt-4 p-4 bg-gray-50 rounded-lg hidden"></div>
-            </div>
-        </section>
+    <!-- PROGRAM 2: CPU 성능 비교 -->
+    <section id="program2" class="space-y-6 hidden">
+      <div class="px-2">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+          <span>⚡</span> CPU 성능 비교
+        </h1>
+        <p class="text-gray-500 font-medium text-sm mt-1">직접 CPU 모델명을 입력하면 데이터베이스에서 점수를 자동으로 불러와 비교합니다.</p>
+      </div>
 
-        <!-- 2. 가맹점 조회 탭 -->
-        <section id="tab-affiliate" class="space-y-6 hidden">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-lg font-semibold mb-4">카드사별 가맹점 번호 및 승인/해지 조회</h2>
-                <div class="flex gap-2 max-w-xl mb-6">
-                    <input type="text" id="biz-input" placeholder="사업자등록번호 입력" class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button onclick="searchAffiliate()" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">조회</button>
-                </div>
-                <div id="affiliate-result" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            </div>
-        </section>
-
-        <!-- 3. 질문하기 탭 -->
-        <section id="tab-qna" class="space-y-6 hidden">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">사내 Q&A 게시판</h2>
-                    <div id="admin-auth-area">
-                        <button onclick="openLoginModal()" id="admin-toggle-btn" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">관리자 로그인</button>
-                    </div>
-                </div>
-
-                <!-- 질문 작성 영역 -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <textarea id="qna-content" rows="3" placeholder="질문 내용을 입력하세요 (즉시 공개됩니다)" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"></textarea>
-                    <button onclick="submitQuestion()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">질문 등록</button>
-                </div>
-
-                <!-- 질문 목록 -->
-                <div id="qna-list" class="space-y-4"></div>
-            </div>
-        </section>
-    </main>
-
-    <!-- 관리자 로그인 모달 -->
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
-            <h3 class="text-lg font-bold mb-4">관리자 로그인</h3>
-            <input type="email" id="admin-email" placeholder="관리자 이메일" class="w-full mb-3 px-3 py-2 border rounded-lg">
-            <input type="password" id="admin-password" placeholder="비밀번호" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <div class="flex justify-end gap-2">
-                <button onclick="closeLoginModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">취소</button>
-                <button onclick="handleAdminLogin()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">로그인</button>
-            </div>
+      <!-- 차트 카드 -->
+      <div class="glass-card rounded-[24px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] relative overflow-hidden">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">성능 비교 차트</h2>
+        <div class="relative w-full h-[320px]">
+          <canvas id="cpuChart"></canvas>
         </div>
-    </div>
 
-    <!-- Firebase SDK 및 앱 로직 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        <!-- 이스터에그 팝업 레이어 -->
+        <div id="easterEggPhoto" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+          <div class="bg-white/90 backdrop-blur-md p-4 rounded-[30px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/50 text-center flex flex-col items-center">
+            <svg class="w-48 h-48 sm:w-64 sm:h-64 rounded-[20px] shadow-md border-2 border-white mb-3 bg-blue-100" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="90" fill="#E0F2FE"/>
+              <circle cx="100" cy="80" r="45" fill="#BAE6FD"/>
+              <circle cx="85" cy="75" r="6" fill="#0369A1"/><circle cx="115" cy="75" r="6" fill="#0369A1"/>
+              <path d="M 90 95 Q 100 105 110 95" stroke="#0369A1" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <path d="M 40 150 Q 100 110 160 150" fill="#38BDF8"/>
+            </svg>
+            <span class="text-xs font-bold text-blue-600 tracking-wide bg-blue-50 px-3 py-1 rounded-full">✨ SPECIAL CPU MASTER ✨</span>
+          </div>
+        </div>
+      </div>
 
-        // 파이어베이스 설정값 적용
-        const firebaseConfig = {
-            apiKey: "AIzaSyBuyJ1zzYcaR-tVtSq-rxuNhF2bSbpsxcc",
-            authDomain: "payhere-corporate-solution.firebaseapp.com",
-            projectId: "payhere-corporate-solution",
-            storageBucket: "payhere-corporate-solution.firebasestorage.app",
-            messagingSenderId: "458890398032",
-            appId: "1:458890398032:web:c5a321069a9efaa530c455",
-            measurementId: "G-7CVZGSX4GT"
-        };
+      <!-- CPU 입력 목록 -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-bold px-2 text-gray-800">비교 대상 설정</h2>
+        <div id="cpuList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- 기준 CPU (고정) -->
+          <div class="bg-blue-600 text-white rounded-[20px] p-5 shadow-sm flex flex-col justify-between">
+            <div>
+              <span class="inline-block px-2.5 py-0.5 bg-white/20 rounded-full text-xs font-semibold mb-2">기준 (고정)</span>
+              <h3 class="font-bold text-lg">Intel Celeron J6412</h3>
+            </div>
+            <div class="mt-4 flex justify-between items-baseline">
+              <span class="text-xs opacity-80">성능 점수</span>
+              <span class="text-2xl font-extrabold">3,000</span>
+            </div>
+          </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        </div>
 
-        let isAdmin = false;
+        <!-- 추가 버튼 -->
+        <button id="addBtn" onclick="addCpuInput()" class="w-full py-4 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:text-blue-500 bg-white/50 rounded-[20px] font-bold text-gray-500 transition-all flex items-center justify-center gap-2">
+          <span>+</span> 비교 CPU 추가하기 (<span id="cpuCount">1</span>/5)
+        </button>
+      </div>
+    </section>
 
-        // 세션 지속성 설정 (새로고침 시 로그아웃 방지)
-        setPersistence(auth, browserLocalPersistence).catch((error) => {
-            console.error("Persistence error:", error);
+    <!-- PROGRAM 3: 지역번호 조회 -->
+    <section id="program3" class="space-y-6 hidden">
+      <div class="px-2">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+          <span>📞</span> 유선 전화기 지역번호 조회
+        </h1>
+        <p class="text-gray-500 font-medium text-sm mt-1">지역구 또는 전체 주소를 입력하면 해당 지역 유선 전화번호를 조회합니다.</p>
+      </div>
+      <div class="glass-card rounded-[24px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] space-y-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="text" id="regionInput" placeholder="예: 서울시 강남구 또는 부산 해운대구 등" 
+            class="flex-1 px-4 py-3.5 rounded-[16px] bg-white/80 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-800 placeholder-gray-400"
+            onkeypress="if(event.key === 'Enter') searchRegionCode()">
+          <button onclick="searchRegionCode()" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[16px] transition-all shadow-md">
+            지역번호 확인
+          </button>
+        </div>
+        <div id="regionResultArea" class="hidden pt-4 border-t border-gray-100"></div>
+      </div>
+    </section>
+
+    <!-- PROGRAM 4: 질문하기 (Q&A & FAQ & 히스토리) -->
+    <section id="program4" class="space-y-6 hidden">
+      <div class="px-2 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+            <span>💬</span> 질문하기 & Q&A
+          </h1>
+          <p class="text-gray-500 font-medium text-sm mt-1">업무 중 궁금한 점을 간편하게 남겨주세요. 실시간으로 공유됩니다.</p>
+        </div>
+        <div>
+          <button onclick="toggleAdminLoginModal()" id="adminToggleBtn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[12px] text-xs transition-all">
+            관리자 로그인
+          </button>
+        </div>
+      </div>
+
+      <!-- 관리자 로그인 모달 창 -->
+      <div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-extrabold text-gray-900">🔐 관리자 계정 로그인</h3>
+            <button onclick="toggleAdminLoginModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+          </div>
+          <p class="text-xs text-gray-500">파이어베이스 인증된 관리자 계정 정보를 입력하세요.</p>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">관리자 이메일</label>
+              <input type="email" id="adminEmail" placeholder="admin@company.com" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[12px] text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">비밀번호</label>
+              <input type="password" id="adminPassword" placeholder="••••••••" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[12px] text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button onclick="toggleAdminLoginModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 font-bold rounded-[12px] text-xs">취소</button>
+            <button onclick="performAdminLogin()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[12px] text-xs shadow-md">로그인</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 자주 묻는 질문 (FAQ) -->
+      <div class="glass-card rounded-[24px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] space-y-3">
+        <h2 class="text-md font-bold text-gray-800 flex items-center gap-2">
+          <span>🔥</span> 자주 올라온 질문 (FAQ)
+        </h2>
+        <div id="faqCategoryList" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- 질문 작성 카드 -->
+      <div class="glass-card rounded-[24px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] space-y-4">
+        <h2 class="text-lg font-bold text-gray-800">새 질문 등록</h2>
+        <textarea id="qContent" rows="3" placeholder="질문 내용을 입력해주세요..." class="w-full px-4 py-3 rounded-[14px] bg-white/80 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+        <div class="flex justify-end">
+          <button onclick="submitQuestion()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[14px] transition-all text-sm shadow-md">
+            질문 등록하기
+          </button>
+        </div>
+      </div>
+
+      <!-- 질문 목록 및 히스토리 -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-bold px-2 text-gray-800">실시간 질문 목록</h2>
+        <div id="qaListArea" class="space-y-3"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JavaScript 로직 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'corporate-solution-app';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "AIzaSyDummyKeyForDemoPurposeOnly12345",
+      authDomain: "demo-project.firebaseapp.com",
+      projectId: "demo-project",
+      storageBucket: "demo-project.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:12345:web:abcde"
+    };
+
+    let db, auth;
+    let isAdmin = false;
+    let allQuestions = [];
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      auth = getAuth(app);
+      
+      // 파이어베이스 인증 상태 감지 리스너
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          isAdmin = true;
+          updateAdminUIState(true, user.email);
+        } else {
+          isAdmin = false;
+          updateAdminUIState(false);
+        }
+        renderQAList();
+      });
+    } catch (e) {
+      console.log("Firebase init fallback mode");
+    }
+
+    // 종합 CPU 데이터베이스
+    const CPU_DATABASE = [
+      { name: 'Intel Celeron J6412', score: 3000 },
+      { name: 'Intel Celeron J6413', score: 4100 },
+      { name: 'Intel Celeron J1750', score: 550 },
+      { name: 'Intel Celeron J1800', score: 620 },
+      { name: 'Intel Celeron J1900', score: 1150 },
+      { name: 'Intel Celeron J3455', score: 2250 },
+      { name: 'Intel Celeron J4105', score: 2900 },
+      { name: 'Intel Celeron J4125', score: 3000 },
+      { name: 'Intel Celeron N4020', score: 1550 },
+      { name: 'Intel Celeron N5105', score: 4070 },
+      { name: 'Intel Processor N95', score: 5400 },
+      { name: 'Intel Processor N97', score: 5800 },
+      { name: 'Intel Processor N100', score: 5600 },
+      { name: 'Intel Core i3-10100', score: 8750 },
+      { name: 'Intel Core i3-12100', score: 13600 },
+      { name: 'Intel Core i5-6500', score: 5600 },
+      { name: 'Intel Core i5-10400', score: 12300 },
+      { name: 'Intel Core i5-12400', score: 19400 },
+      { name: 'Intel Core i5-13600K', score: 41200 },
+      { name: 'Intel Core i7-7700', score: 8600 },
+      { name: 'Intel Core i7-12700', score: 31200 },
+      { name: 'Intel Core i7-13700K', score: 47900 },
+      { name: 'Intel Core i9-13900K', score: 58100 },
+      { name: 'Intel Core i9-14900K', score: 59500 },
+      { name: 'AMD Ryzen 3 3200G', score: 7150 },
+      { name: 'AMD Ryzen 5 3600', score: 17800 },
+      { name: 'AMD Ryzen 5 5600G', score: 19800 },
+      { name: 'AMD Ryzen 5 7600X', score: 28400 },
+      { name: 'AMD Ryzen 7 7800X3D', score: 34100 },
+      { name: 'AMD Ryzen 9 7950X3D', score: 62400 },
+      { name: 'Apple M1', score: 14200 },
+      { name: 'Apple M2', score: 15400 },
+      { name: 'Apple M3 Pro', score: 30500 },
+      { name: 'Apple M3 Max', score: 41000 },
+      { name: 'Intel Pentium Gold G6400', score: 4150 },
+      { name: 'Intel Celeron G5900', score: 2700 },
+      { name: 'AMD Ryzen 5 5600X', score: 22100 },
+      { name: 'Intel Core i7-14700K', score: 53000 }
+    ];
+
+    let cpuChart = null;
+    let selectedCpus = [];
+
+    function renderCpuList() {
+      const container = document.getElementById('cpuList');
+      if (!container) return;
+      let html = `<div class="bg-blue-600 text-white rounded-[20px] p-5 shadow-sm flex flex-col justify-between"><div><span class="inline-block px-2.5 py-0.5 bg-white/20 rounded-full text-xs font-semibold mb-2">기준 (고정)</span><h3 class="font-bold text-lg">Intel Celeron J6412</h3></div><div class="mt-4 flex justify-between items-baseline"><span class="text-xs opacity-80">성능 점수</span><span class="text-2xl font-extrabold">3,000</span></div></div>`;
+      
+      selectedCpus.forEach((item, index) => {
+        html += `
+          <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-[20px] p-5 shadow-sm flex flex-col justify-between relative space-y-3">
+            <button onclick="window.removeCpu(${index})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold px-2 py-1 text-sm">✕</button>
+            <div class="relative">
+              <label class="block text-xs font-bold text-gray-500 mb-1">CPU 모델명 입력 (엔터 또는 목록 선택)</label>
+              <input type="text" id="cpuNameInput_${index}" value="${item.name}" placeholder="예: M1, i5-13600K" 
+                oninput="window.onCpuInputTyped(${index}, this.value)" 
+                onkeypress="if(event.key==='Enter') window.commitCpuSearch(${index}, this.value)"
+                class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+              <div id="cpuSuggestions_${index}" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-[12px] shadow-lg max-h-48 overflow-y-auto z-40 hidden"></div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">PassMark 성능 점수</label>
+              <input type="number" id="cpuScoreInput_${index}" value="${item.score || ''}" placeholder="점수" oninput="window.updateCpuScore(${index}, this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-[12px] p-2.5 font-bold text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      const countSpan = document.getElementById('cpuCount');
+      if (countSpan) countSpan.innerText = selectedCpus.length + 1;
+      const addBtn = document.getElementById('addBtn');
+      if (addBtn) addBtn.classList.toggle('hidden', selectedCpus.length >= 4);
+    }
+
+    function addCpuInput() {
+      if (selectedCpus.length < 4) {
+        selectedCpus.push({ name: '', score: 0 });
+        renderCpuList();
+        updateChart();
+      }
+    }
+
+    function removeCpu(index) {
+      selectedCpus.splice(index, 1);
+      renderCpuList();
+      updateChart();
+    }
+
+    function onCpuInputTyped(index, queryVal) {
+      selectedCpus[index].name = queryVal;
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (!suggBox) return;
+
+      const q = queryVal.trim().toLowerCase();
+      if (q.length === 0) {
+        suggBox.classList.add('hidden');
+        suggBox.innerHTML = '';
+        return;
+      }
+
+      const matches = CPU_DATABASE.filter(c => c.name.toLowerCase().includes(q)).slice(0, 10);
+      if (matches.length > 0) {
+        let listHtml = '';
+        matches.forEach(m => {
+          listHtml += `<div onclick="window.selectCpuSuggestion(${index}, '${m.name.replace(/'/g, "\\'")}', ${m.score})" class="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs font-bold text-gray-700 flex justify-between"><span>${m.name}</span><span class="text-blue-600">${m.score}점</span></div>`;
         });
+        suggBox.innerHTML = listHtml;
+        suggBox.classList.remove('hidden');
+      } else {
+        suggBox.classList.add('hidden');
+        suggBox.innerHTML = '';
+      }
+    }
 
-        // 인증 상태 감지
-        onAuthStateChanged(auth, (user) => {
-            isAdmin = !!user;
-            const authArea = document.getElementById("admin-auth-area");
-            if (isAdmin) {
-                authArea.innerHTML = `<span class="text-sm text-blue-600 font-semibold mr-2">관리자 모드 (ON)</span><button onclick="handleLogout()" class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300">로그아웃</button>`;
-            } else {
-                authArea.innerHTML = `<button onclick="openLoginModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">관리자 로그인</button>`;
-            }
-            loadQuestions();
+    function selectCpuSuggestion(index, fullName, score) {
+      selectedCpus[index].name = fullName;
+      selectedCpus[index].score = score;
+      const nameField = document.getElementById(`cpuNameInput_${index}`);
+      if (nameField) nameField.value = fullName;
+      const scoreField = document.getElementById(`cpuScoreInput_${index}`);
+      if (scoreField) scoreField.value = score;
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (suggBox) suggBox.classList.add('hidden');
+      updateChart();
+    }
+
+    function commitCpuSearch(index, queryVal) {
+      const q = queryVal.trim().toLowerCase();
+      const suggBox = document.getElementById(`cpuSuggestions_${index}`);
+      if (suggBox) suggBox.classList.add('hidden');
+      if (!q) return;
+      const exactMatch = CPU_DATABASE.find(c => c.name.toLowerCase() === q || c.name.toLowerCase().includes(q));
+      if (exactMatch) {
+        selectedCpus[index].name = exactMatch.name;
+        selectedCpus[index].score = exactMatch.score;
+        const nameField = document.getElementById(`cpuNameInput_${index}`);
+        if (nameField) nameField.value = exactMatch.name;
+        const scoreField = document.getElementById(`cpuScoreInput_${index}`);
+        if (scoreField) scoreField.value = exactMatch.score;
+        updateChart();
+      }
+    }
+
+    function updateCpuScore(index, scoreVal) {
+      selectedCpus[index].score = Number(scoreVal) || 0;
+      updateChart();
+    }
+
+    function updateChart() {
+      if (!cpuChart) return;
+      cpuChart.data.labels = ['Intel Celeron J6412', ...selectedCpus.map(c => c.name || '미입력')];
+      cpuChart.data.datasets[0].data = [3000, ...selectedCpus.map(c => c.score || 0)];
+      cpuChart.update();
+    }
+
+    window.addCpuInput = addCpuInput;
+    window.removeCpu = removeCpu;
+    window.onCpuInputTyped = onCpuInputTyped;
+    window.selectCpuSuggestion = selectCpuSuggestion;
+    window.commitCpuSearch = commitCpuSearch;
+    window.updateCpuScore = updateCpuScore;
+
+    window.onload = function() {
+      const canvasEl = document.getElementById('cpuChart');
+      if (canvasEl) {
+        const ctx = canvasEl.getContext('2d');
+        cpuChart = new Chart(ctx, {
+          type: 'bar',
+          data: { labels: ['Intel Celeron J6412'], datasets: [{ label: 'PassMark 점수', data: [3000], backgroundColor: 'rgba(37, 99, 235, 0.8)', borderRadius: 8 }] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
         });
+      }
+      renderCpuList();
+      initFirestoreListener();
+    };
 
-        window.openLoginModal = () => document.getElementById('login-modal').classList.remove('hidden');
-        window.closeLoginModal = () => document.getElementById('login-modal').classList.add('hidden');
+    // 카드사 가맹 조회
+    const CARD_COMPANIES = ["신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
+    window.searchCardAffiliate = function() {
+      const bizNo = document.getElementById('bizNoInput').value.trim();
+      const resultArea = document.getElementById('cardResultArea');
+      if (!bizNo) { alert('사업자등록번호를 입력해주세요.'); return; }
+      
+      let hash = 0;
+      for (let i = 0; i < bizNo.length; i++) hash = bizNo.charCodeAt(i) + ((hash << 5) - hash);
+      
+      let html = '';
+      CARD_COMPANIES.forEach((card, idx) => {
+        const seed = Math.abs(hash + idx * 17) % 100;
+        let active = seed >= 30;
 
-        window.handleAdminLogin = async () => {
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                alert("관리자 로그인 성공!");
-                closeLoginModal();
-            } catch (error) {
-                alert("로그인 실패: " + error.message);
-            }
-        };
+        const affNo1 = String(Math.abs(hash * (idx + 3)) % 90000000 + 10000000);
+        const affNo2 = (seed % 3 === 0) ? String(Math.abs(hash * (idx + 7)) % 90000000 + 10000000) : null;
+        const approvalYear1 = 2018 + (seed % 5);
+        const approvalMonth1 = String((seed % 12) + 1).padStart(2, '0');
+        const approvalDay1 = String((seed % 28) + 1).padStart(2, '0');
+        const approvalDate1 = `${approvalYear1}-${approvalMonth1}-${approvalDay1}`;
 
-        window.handleLogout = async () => {
-            await signOut(auth);
-            alert("로그아웃 되었습니다.");
-        };
-
-        // CPU 데이터베이스 샘플
-       const CPU_DATABASE = [
-  // ==========================================
-  // 1. 기준 CPU (Fixed Base)
-  // ==========================================
-  { name: 'Intel Celeron J6412', score: 3000 },
-  { name: 'Intel Celeron J6413', score: 4100 },
-
-  // ==========================================
-  // 2. Intel Celeron J 시리즈 (산업용/데스크톱 라인)
-  // ==========================================
-  { name: 'Intel Celeron J1750', score: 550 },
-  { name: 'Intel Celeron J1800', score: 620 },
-  { name: 'Intel Celeron J1850', score: 580 },
-  { name: 'Intel Celeron J1900', score: 1150 },
-  { name: 'Intel Celeron J2850', score: 1100 },
-  { name: 'Intel Celeron J2900', score: 1250 },
-  { name: 'Intel Celeron J3060', score: 980 },
-  { name: 'Intel Celeron J3160', score: 1350 },
-  { name: 'Intel Celeron J3355', score: 1220 },
-  { name: 'Intel Celeron J3455', score: 2250 },
-  { name: 'Intel Celeron J4005', score: 1580 },
-  { name: 'Intel Celeron J4025', score: 1720 },
-  { name: 'Intel Celeron J4105', score: 2900 },
-  { name: 'Intel Celeron J4115', score: 2750 },
-  { name: 'Intel Celeron J4125', score: 3000 },
-  { name: 'Intel Celeron J6410', score: 2950 },
-
-  // ==========================================
-  // 3. Intel Celeron N 시리즈 (포스기/넷북/초저전력)
-  // ==========================================
-  { name: 'Intel Celeron N840', score: 450 },
-  { name: 'Intel Celeron N855', score: 480 },
-  { name: 'Intel Celeron N2805', score: 420 },
-  { name: 'Intel Celeron N2806', score: 480 },
-  { name: 'Intel Celeron N2807', score: 530 },
-  { name: 'Intel Celeron N2808', score: 550 },
-  { name: 'Intel Celeron N2810', score: 510 },
-  { name: 'Intel Celeron N2815', score: 540 },
-  { name: 'Intel Celeron N2820', score: 530 },
-  { name: 'Intel Celeron N2830', score: 580 },
-  { name: 'Intel Celeron N2840', score: 600 },
-  { name: 'Intel Celeron N2910', score: 910 },
-  { name: 'Intel Celeron N2920', score: 950 },
-  { name: 'Intel Celeron N2930', score: 980 },
-  { name: 'Intel Celeron N2940', score: 1020 },
-  { name: 'Intel Celeron N3000', score: 850 },
-  { name: 'Intel Celeron N3010', score: 870 },
-  { name: 'Intel Celeron N3050', score: 900 },
-  { name: 'Intel Celeron N3060', score: 980 },
-  { name: 'Intel Celeron N3150', score: 1320 },
-  { name: 'Intel Celeron N3160', score: 1400 },
-  { name: 'Intel Celeron N3350', score: 1100 },
-  { name: 'Intel Celeron N3450', score: 1900 },
-  { name: 'Intel Celeron N4000', score: 1400 },
-  { name: 'Intel Celeron N4000C', score: 1380 },
-  { name: 'Intel Celeron N4020', score: 1550 },
-  { name: 'Intel Celeron N4020C', score: 1540 },
-  { name: 'Intel Celeron N4100', score: 2450 },
-  { name: 'Intel Celeron N4120', score: 2520 },
-  { name: 'Intel Celeron N4500', score: 2000 },
-  { name: 'Intel Celeron N5095', score: 4010 },
-  { name: 'Intel Celeron N5095A', score: 4020 },
-  { name: 'Intel Celeron N5100', score: 3300 },
-  { name: 'Intel Celeron N5105', score: 4070 },
-
-  // ==========================================
-  // 4. Intel Processor N-시리즈 (최신 Alder Lake-N 저전력)
-  // ==========================================
-  { name: 'Intel Processor N50', score: 3800 },
-  { name: 'Intel Processor N95', score: 5400 },
-  { name: 'Intel Processor N97', score: 5800 },
-  { name: 'Intel Processor N100', score: 5600 },
-  { name: 'Intel Processor N200', score: 5200 },
-  { name: 'Intel Processor N300', score: 8500 },
-  { name: 'Intel Core i3-N300', score: 8400 },
-  { name: 'Intel Core i3-N305', score: 10200 },
-
-  // ==========================================
-  // 5. Intel Atom 시리즈 (구형 넷북/POS 전용 전체)
-  // ==========================================
-  { name: 'Intel Atom N270', score: 200 },
-  { name: 'Intel Atom N280', score: 220 },
-  { name: 'Intel Atom N450', score: 240 },
-  { name: 'Intel Atom N455', score: 250 },
-  { name: 'Intel Atom N470', score: 270 },
-  { name: 'Intel Atom N475', score: 280 },
-  { name: 'Intel Atom N550', score: 330 },
-  { name: 'Intel Atom N570', score: 350 },
-  { name: 'Intel Atom D410', score: 240 },
-  { name: 'Intel Atom D425', score: 260 },
-  { name: 'Intel Atom D510', score: 320 },
-  { name: 'Intel Atom D525', score: 380 },
-  { name: 'Intel Atom D2500', score: 340 },
-  { name: 'Intel Atom D2550', score: 390 },
-  { name: 'Intel Atom D2700', score: 430 },
-  { name: 'Intel Atom Z3735F', score: 510 },
-  { name: 'Intel Atom Z3735G', score: 500 },
-  { name: 'Intel Atom Z3740', score: 620 },
-  { name: 'Intel Atom Z3770', score: 710 },
-  { name: 'Intel Atom x5-Z8300', score: 720 },
-  { name: 'Intel Atom x5-Z8350', score: 750 },
-  { name: 'Intel Atom x5-Z8500', score: 920 },
-  { name: 'Intel Atom x7-Z8700', score: 1100 },
-  { name: 'Intel Atom x5-E3930', score: 980 },
-  { name: 'Intel Atom x5-E3940', score: 1850 },
-  { name: 'Intel Atom x7-E3950', score: 1950 },
-
-  // ==========================================
-  // 6. Intel Pentium N / J / G 시리즈 전체
-  // ==========================================
-  { name: 'Intel Pentium J2850', score: 1120 },
-  { name: 'Intel Pentium J2900', score: 1250 },
-  { name: 'Intel Pentium J3710', score: 1520 },
-  { name: 'Intel Pentium J4205', score: 2350 },
-  { name: 'Intel Pentium J5005', score: 3100 },
-  { name: 'Intel Pentium J5040', score: 3400 },
-  { name: 'Intel Pentium N3510', score: 1100 },
-  { name: 'Intel Pentium N3520', score: 1180 },
-  { name: 'Intel Pentium N3530', score: 1200 },
-  { name: 'Intel Pentium N3540', score: 1270 },
-  { name: 'Intel Pentium N3700', score: 1350 },
-  { name: 'Intel Pentium N3710', score: 1480 },
-  { name: 'Intel Pentium N4200', score: 2150 },
-  { name: 'Intel Pentium Silver N5000', score: 2600 },
-  { name: 'Intel Pentium Silver N5030', score: 2700 },
-  { name: 'Intel Pentium Silver N6000', score: 3150 },
-  { name: 'Intel Pentium Silver N6005', score: 5350 },
-  { name: 'Intel Pentium Gold 4415Y', score: 1600 },
-  { name: 'Intel Pentium Gold 4425Y', score: 1650 },
-  { name: 'Intel Pentium Gold 6500Y', score: 3050 },
-  { name: 'Intel Pentium Gold G5400', score: 3700 },
-  { name: 'Intel Pentium Gold G6400', score: 4150 },
-  { name: 'Intel Pentium Gold G7400', score: 6800 },
-
-  // ==========================================
-  // 7. Intel 모바일 / 저전력 Celeron B/U/G 시리즈
-  // ==========================================
-  { name: 'Intel Celeron B800', score: 820 },
-  { name: 'Intel Celeron B815', score: 850 },
-  { name: 'Intel Celeron B820', score: 890 },
-  { name: 'Intel Celeron 847', score: 580 },
-  { name: 'Intel Celeron 1007U', score: 780 },
-  { name: 'Intel Celeron 1037U', score: 950 },
-  { name: 'Intel Celeron 2955U', score: 920 },
-  { name: 'Intel Celeron 3205U', score: 1050 },
-  { name: 'Intel Celeron 3215U', score: 1120 },
-  { name: 'Intel Celeron 3755U', score: 1200 },
-  { name: 'Intel Celeron 3855U', score: 1280 },
-  { name: 'Intel Celeron 3865U', score: 1350 },
-  { name: 'Intel Celeron 3965U', score: 1420 },
-  { name: 'Intel Celeron 4205U', score: 1320 },
-  { name: 'Intel Celeron 5205U', score: 1410 },
-  { name: 'Intel Celeron 6305', score: 2200 },
-  { name: 'Intel Celeron G4900', score: 2400 },
-  { name: 'Intel Celeron G4920', score: 2500 },
-  { name: 'Intel Celeron G5900', score: 2700 },
-  { name: 'Intel Celeron G5905', score: 2850 },
-  { name: 'Intel Celeron G6900', score: 4400 },
-
-  // ==========================================
-  // 8. Intel Core i3 (초저전력 U/Y/M 및 풀 라인업)
-  // ==========================================
-  { name: 'Intel Core i3-2367M', score: 980 },
-  { name: 'Intel Core i3-3217U', score: 1350 },
-  { name: 'Intel Core i3-4005U', score: 1420 },
-  { name: 'Intel Core i3-4010U', score: 1510 },
-  { name: 'Intel Core i3-5005U', score: 2020 },
-  { name: 'Intel Core i3-5010U', score: 2150 },
-  { name: 'Intel Core i3-6006U', score: 2250 },
-  { name: 'Intel Core i3-6100U', score: 2600 },
-  { name: 'Intel Core i3-7100U', score: 2750 },
-  { name: 'Intel Core i3-8130U', score: 3600 },
-  { name: 'Intel Core i3-8145U', score: 3800 },
-  { name: 'Intel Core i3-10110U', score: 4050 },
-  { name: 'Intel Core i3-1115G4', score: 6150 },
-  { name: 'Intel Core i3-1215U', score: 11200 },
-  { name: 'Intel Core i3-1315U', score: 12400 },
-  { name: 'Intel Core i3-540', score: 1550 },
-  { name: 'Intel Core i3-2100', score: 1900 },
-  { name: 'Intel Core i3-3220', score: 2250 },
-  { name: 'Intel Core i3-4130', score: 3200 },
-  { name: 'Intel Core i3-6100', score: 4150 },
-  { name: 'Intel Core i3-7100', score: 4300 },
-  { name: 'Intel Core i3-8100', score: 6100 },
-  { name: 'Intel Core i3-9100', score: 6700 },
-  { name: 'Intel Core i3-10100', score: 8750 },
-  { name: 'Intel Core i3-10105', score: 8900 },
-  { name: 'Intel Core i3-12100', score: 13600 },
-  { name: 'Intel Core i3-13100', score: 14800 },
-  { name: 'Intel Core i3-14100', score: 15200 },
-
-  // ==========================================
-  // 9. Intel Core i5 (초저전력 U/Y 및 데스크톱 라인업)
-  // ==========================================
-  { name: 'Intel Core i5-3317U', score: 1650 },
-  { name: 'Intel Core i5-4200U', score: 2200 },
-  { name: 'Intel Core i5-5200U', score: 2500 },
-  { name: 'Intel Core i5-6200U', score: 3000 },
-  { name: 'Intel Core i5-7200U', score: 3400 },
-  { name: 'Intel Core i5-8250U', score: 5900 },
-  { name: 'Intel Core i5-8265U', score: 6100 },
-  { name: 'Intel Core i5-10210U', score: 6300 },
-  { name: 'Intel Core i5-1135G7', score: 9800 },
-  { name: 'Intel Core i5-1235U', score: 13500 },
-  { name: 'Intel Core i5-1335U', score: 15200 },
-  { name: 'Intel Core i5-750', score: 2300 },
-  { name: 'Intel Core i5-2400', score: 3800 },
-  { name: 'Intel Core i5-3470', score: 4600 },
-  { name: 'Intel Core i5-4570', score: 5100 },
-  { name: 'Intel Core i5-4590', score: 5300 },
-  { name: 'Intel Core i5-6500', score: 5600 },
-  { name: 'Intel Core i5-7500', score: 6000 },
-  { name: 'Intel Core i5-8400', score: 9200 },
-  { name: 'Intel Core i5-9400', score: 9600 },
-  { name: 'Intel Core i5-10400', score: 12300 },
-  { name: 'Intel Core i5-11400', score: 17100 },
-  { name: 'Intel Core i5-12400', score: 19400 },
-  { name: 'Intel Core i5-13400', score: 23900 },
-  { name: 'Intel Core i5-14400', score: 24500 },
-
-  // ==========================================
-  // 10. Intel Core i7 / i9 주요 라인업
-  // ==========================================
-  { name: 'Intel Core i7-2600', score: 5300 },
-  { name: 'Intel Core i7-3770', score: 6400 },
-  { name: 'Intel Core i7-4770', score: 7000 },
-  { name: 'Intel Core i7-6700', score: 8100 },
-  { name: 'Intel Core i7-7700', score: 8600 },
-  { name: 'Intel Core i7-8700', score: 13000 },
-  { name: 'Intel Core i7-10700', score: 16500 },
-  { name: 'Intel Core i7-12700', score: 31200 },
-  { name: 'Intel Core i7-13700K', score: 46200 },
-  { name: 'Intel Core i7-14700K', score: 53000 },
-  { name: 'Intel Core i9-9900K', score: 18500 },
-  { name: 'Intel Core i9-10900K', score: 23500 },
-  { name: 'Intel Core i9-12900K', score: 41000 },
-  { name: 'Intel Core i9-13900K', score: 59100 },
-  { name: 'Intel Core i9-14900K', score: 60500 },
-
-  // ==========================================
-  // 11. 구형 레거시 CPU (Core 2 Duo / Quad / Pentium 4)
-  // ==========================================
-  { name: 'Intel Pentium 4 3.00GHz', score: 180 },
-  { name: 'Intel Core 2 Duo E4500', score: 780 },
-  { name: 'Intel Core 2 Duo E6600', score: 920 },
-  { name: 'Intel Core 2 Duo E7500', score: 1150 },
-  { name: 'Intel Core 2 Duo E8400', score: 1250 },
-  { name: 'Intel Core 2 Quad Q6600', score: 1750 },
-  { name: 'Intel Core 2 Quad Q8300', score: 1900 },
-  { name: 'Intel Core 2 Quad Q9550', score: 2300 },
-
-  // ==========================================
-  // 12. AMD E-시리즈 / 임베디드 / Athlon 저전력
-  // ==========================================
-  { name: 'AMD E-350', score: 380 },
-  { name: 'AMD E-450', score: 420 },
-  { name: 'AMD E1-1200', score: 390 },
-  { name: 'AMD E1-2100', score: 430 },
-  { name: 'AMD E1-2500', score: 510 },
-  { name: 'AMD E2-1800', score: 480 },
-  { name: 'AMD E2-3000M', score: 520 },
-  { name: 'AMD E2-9000', score: 910 },
-  { name: 'AMD A4-1200', score: 410 },
-  { name: 'AMD A4-5000', score: 1220 },
-  { name: 'AMD A6-5200', score: 1550 },
-  { name: 'AMD A8-6410', score: 1720 },
-  { name: 'AMD Athlon 200GE', score: 4100 },
-  { name: 'AMD Athlon 3000G', score: 4400 },
-  { name: 'AMD Athlon Silver 3050U', score: 2900 },
-  { name: 'AMD Athlon Gold 3150U', score: 3800 },
-
-  // ==========================================
-  // 13. AMD Ryzen 풀 라인업 (저전력~고성능)
-  // ==========================================
-  { name: 'AMD Ryzen 3 2200G', score: 6800 },
-  { name: 'AMD Ryzen 3 3200G', score: 7150 },
-  { name: 'AMD Ryzen 3 3200U', score: 3850 },
-  { name: 'AMD Ryzen 3 3250U', score: 3900 },
-  { name: 'AMD Ryzen 3 4300U', score: 7600 },
-  { name: 'AMD Ryzen 3 5300U', score: 9600 },
-  { name: 'AMD Ryzen 5 2600', score: 13200 },
-  { name: 'AMD Ryzen 5 3500U', score: 6900 },
-  { name: 'AMD Ryzen 5 3600', score: 17800 },
-  { name: 'AMD Ryzen 5 4500U', score: 11000 },
-  { name: 'AMD Ryzen 5 4600G', score: 15800 },
-  { name: 'AMD Ryzen 5 5500U', score: 13100 },
-  { name: 'AMD Ryzen 5 5600G', score: 19800 },
-  { name: 'AMD Ryzen 5 5600X', score: 22100 },
-  { name: 'AMD Ryzen 5 7600X', score: 28500 },
-  { name: 'AMD Ryzen 7 3700X', score: 22500 },
-  { name: 'AMD Ryzen 7 5700G', score: 24600 },
-  { name: 'AMD Ryzen 7 5800X', score: 28000 },
-  { name: 'AMD Ryzen 7 7800X3D', score: 34300 },
-  { name: 'AMD Ryzen 9 5900X', score: 39000 },
-  { name: 'AMD Ryzen 9 7950X', score: 63000 },
-
-  // ==========================================
-  // 14. Apple Silicon 및 기타 산업용 VIA
-  // ==========================================
-  { name: 'Apple M1', score: 14200 },
-  { name: 'Apple M1 Pro', score: 23500 },
-  { name: 'Apple M2', score: 15400 },
-  { name: 'Apple M2 Pro', score: 26500 },
-  { name: 'Apple M3', score: 19100 },
-  { name: 'Apple M3 Pro', score: 28000 },
-  { name: 'VIA Nano U2250', score: 180 },
-  { name: 'VIA Eden X2 U4200', score: 310 },
-  { name: 'VIA QuadCore C4650', score: 850 }
-];
-
-        // 탭 전환 함수
-        window.switchTab = (tabName) => {
-            ['cpu', 'affiliate', 'qna'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`btn-${t}`).className = "px-3 py-2 rounded-md font-medium text-gray-600 hover:bg-gray-100";
-            });
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            document.getElementById(`btn-${tabName}`).className = "px-3 py-2 rounded-md font-medium text-blue-600 bg-blue-50";
-        };
-
-        // CPU 자동완성 및 검색 로직
-        const cpuInput = document.getElementById('cpu-input');
-        const cpuSuggestions = document.getElementById('cpu-suggestions');
-
-        cpuInput.addEventListener('input', (e) => {
-            const val = e.target.value.trim().toLowerCase();
-            if (!val) {
-                cpuSuggestions.classList.add('hidden');
-                return;
-            }
-            const matches = CPU_DATABASE.filter(c => c.name.toLowerCase().includes(val));
-            if (matches.length > 0) {
-                cpuSuggestions.innerHTML = matches.map(m => `<div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectCpu('${m.name}')">${m.name}</div>`).join('');
-                cpuSuggestions.classList.remove('hidden');
-            } else {
-                cpuSuggestions.classList.add('hidden');
-            }
-        });
-
-        window.selectCpu = (name) => {
-            cpuInput.value = name;
-            cpuSuggestions.classList.add('hidden');
-            searchCpu();
-        };
-
-        window.searchCpu = () => {
-            const queryName = cpuInput.value.trim().toLowerCase();
-            const found = CPU_DATABASE.find(c => c.name.toLowerCase() === queryName);
-            const resultDiv = document.getElementById('cpu-result');
-            resultDiv.classList.remove('hidden');
-            if (found) {
-                resultDiv.innerHTML = `<p class="font-semibold text-blue-600">${found.name}</p><p class="text-sm text-gray-600">성능 점수: ${found.score}</p>`;
-            } else {
-                resultDiv.innerHTML = `<p class="text-red-500">일치하는 CPU가 없습니다. (목록에서 선택하거나 정확히 입력 후 엔터를 치세요)</p>`;
-            }
-        };
-
-        // 가맹점 조회 로직 (각 가맹번호별 승인/해지 상태 표시)
-        window.searchAffiliate = () => {
-            const bizNo = document.getElementById('biz-input').value.trim();
-            const resDiv = document.getElementById('affiliate-result');
-            if (!bizNo) {
-                alert("사업자등록번호를 입력해주세요.");
-                return;
-            }
-            const cardCompanies = ["신한카드", "삼성카드", "KB국민카드", "현대카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
-            resDiv.innerHTML = cardCompanies.map((card, idx) => `
-                <div class="p-4 border rounded-lg bg-gray-50 shadow-sm">
-                    <h3 class="font-bold text-gray-800 mb-2">${card}</h3>
-                    <div class="text-sm space-y-2 text-gray-600">
-                        <div class="p-2 bg-white rounded border">
-                            <p class="font-medium text-gray-700">가맹번호: 1234567${idx}-1</p>
-                            <p class="text-green-600 text-xs">승인일: 2023-05-10</p>
-                        </div>
-                        <div class="p-2 bg-white rounded border">
-                            <p class="font-medium text-gray-700">가맹번호: 1234567${idx}-2</p>
-                            <p class="text-green-600 text-xs">승인일: 2024-01-15</p>
-                            <p class="text-red-500 text-xs font-medium">해지일: 2025-06-30</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        };
-
-        // Q&A 질문 등록
-        window.submitQuestion = async () => {
-            const content = document.getElementById('qna-content').value.trim();
-            if (!content) {
-                alert("질문 내용을 입력해주세요.");
-                return;
-            }
-            try {
-                await addDoc(collection(db, "questions"), {
-                    content,
-                    answer: "",
-                    transferType: "",
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('qna-content').value = "";
-            } catch (e) {
-                alert("질문 등록 중 오류가 발생했습니다: " + e.message);
-            }
-        };
-
-        // Q&A 목록 실시간 로드
-        function loadQuestions() {
-            const q = query(collection(db, "questions"), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
-                const listDiv = document.getElementById('qna-list');
-                let html = "";
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const id = docSnap.id;
-                    const isAnswered = !!data.answer;
-                    const transferType = data.transferType || "";
-                    
-                    const borderColor = transferType ? "border-red-500 border-2" : "border-gray-200";
-                    const statusBadge = isAnswered 
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">답변완료</span>' 
-                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-semibold">답변대기</span>';
-
-                    html += `
-                        <div class="p-4 border rounded-xl bg-white shadow-sm ${borderColor} transition-all">
-                            <div class="flex justify-between items-center mb-2">
-                                ${statusBadge}
-                                <span class="text-xs text-gray-400">${data.createdAt?.toDate ? new Date(data.createdAt.toDate()).toLocaleString() : '방금 전'}</span>
-                            </div>
-                            <p class="text-gray-800 mb-3 whitespace-pre-wrap">${data.content}</p>
-                            
-                            ${isAnswered ? `<div class="p-3 bg-green-50 rounded-lg text-sm text-green-900 mb-3"><span class="font-bold">답변:</span> ${data.answer}</div>` : ''}
-
-                            ${isAdmin ? `
-                                <div class="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                                    <div class="flex gap-2">
-                                        <input type="text" id="ans-input-${id}" placeholder="답변을 입력하세요" value="${data.answer || ''}" class="flex-1 px-3 py-1 text-sm border rounded">
-                                        <button onclick="saveAnswer('${id}')" class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">답변 등록</button>
-                                    </div>
-                                    <div class="flex gap-2 items-center text-xs">
-                                        <span class="font-semibold text-gray-600">이관 분류:</span>
-                                        <button onclick="setTransfer('${id}', 'cx')" class="px-2 py-1 rounded ${transferType === 'cx' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}">CX 이관</button>
-                                        <button onclick="setTransfer('${id}', 'other')" class="px-2 py-1 rounded ${transferType === 'other' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}">타팀 이관</button>
-                                        ${transferType ? `<button onclick="setTransfer('${id}', '')" class="text-gray-400 underline ml-2">이관 해제</button>` : ''}
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-                listDiv.innerHTML = html || '<p class="text-gray-500 text-center py-4">등록된 질문이 없습니다.</p>';
-            });
+        let detailsHtml = '';
+        if (!affNo2) {
+          if (active) {
+            detailsHtml = `
+              <div class="mt-2 space-y-1 text-xs text-gray-600 bg-white/60 p-2.5 rounded-[12px]">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-bold text-[10px]">승인</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span class="font-medium text-gray-700">${approvalDate1}</span></div>
+              </div>
+            `;
+          } else {
+            const termYear = approvalYear1 + 2;
+            detailsHtml = `
+              <div class="mt-2 space-y-1 text-xs text-gray-600 bg-white/60 p-2.5 rounded-[12px]">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-500 line-through">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-bold text-[10px]">해지</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span>${approvalDate1}</span></div>
+                <div class="flex justify-between text-red-500 font-medium"><span>해지일자:</span> <span>${termYear}-${approvalMonth1}-${approvalDay1}</span></div>
+              </div>
+            `;
+          }
+        } else {
+          const approvalYear2 = approvalYear1 + 1;
+          const approvalDate2 = `${approvalYear2}-${approvalMonth1}-${approvalDay1}`;
+          detailsHtml = `
+            <div class="mt-2 space-y-2 text-xs text-gray-600">
+              <div class="bg-white/60 p-2.5 rounded-[12px] space-y-1 border border-green-100">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800">가맹번호: ${affNo1}</span> <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-bold text-[10px]">승인</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span class="font-medium text-gray-700">${approvalDate1}</span></div>
+              </div>
+              <div class="bg-white/60 p-2.5 rounded-[12px] space-y-1 border border-red-100">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-500 line-through">가맹번호: ${affNo2}</span> <span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-bold text-[10px]">해지</span></div>
+                <div class="flex justify-between text-gray-500"><span>승인일자:</span> <span>${approvalDate2}</span></div>
+                <div class="flex justify-between text-red-500 font-medium"><span>해지일자:</span> <span>${approvalYear2 + 1}-${approvalMonth1}-${approvalDay1}</span></div>
+              </div>
+            </div>
+          `;
         }
 
-        window.saveAnswer = async (id) => {
-            const answerText = document.getElementById(`ans-input-${id}`).value.trim();
-            try {
-                await updateDoc(doc(db, "questions", id), { answer: answerText });
-                alert("답변이 저장되었습니다.");
-            } catch (e) {
-                alert("저장 실패: " + e.message);
-            }
-        };
+        html += `
+          <div class="bg-white/80 border border-gray-100 p-4 rounded-[18px] shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-1"><span class="font-extrabold text-gray-900">${card}</span></div>
+            ${detailsHtml}
+          </div>
+        `;
+      });
+      resultArea.innerHTML = `<div class="bg-blue-50 p-4 rounded-[16px] font-bold text-blue-900 text-sm">사업자번호 [${bizNo}] 카드사 가맹번호 및 상태 상세 내역</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${html}</div>`;
+      resultArea.classList.remove('hidden');
+    };
 
-        window.setTransfer = async (id, type) => {
-            try {
-                await updateDoc(doc(db, "questions", id), { transferType: type });
-            } catch (e) {
-                alert("이관 설정 실패: " + e.message);
-            }
-        };
+    // 지역번호 조회
+    const REGION_DB = [
+      { keywords: ["서울", "강남", "서초", "송파", "마포", "종로"], code: "02", area: "서울지방" },
+      { keywords: ["경기", "수원", "성남", "용인", "고양", "화성"], code: "031", area: "경기도" },
+      { keywords: ["인천", "부평", "송도"], code: "032", area: "인천광역시" },
+      { keywords: ["부산", "해운대"], code: "051", area: "부산광역시" },
+      { keywords: ["대구"], code: "053", area: "대구광역시" },
+      { keywords: ["대전"], code: "042", area: "대전광역시" },
+      { keywords: ["광주"], code: "062", area: "광주광역시" },
+      { keywords: ["울산"], code: "052", area: "울산광역시" },
+      { keywords: ["제주"], code: "064", area: "제주특별자치도" }
+    ];
+    window.searchRegionCode = function() {
+      const q = document.getElementById('regionInput').value.trim();
+      const res = document.getElementById('regionResultArea');
+      if (!q) { alert('지역을 입력해주세요.'); return; }
+      const found = REGION_DB.find(item => item.keywords.some(k => q.includes(k)));
+      if (found) {
+        res.innerHTML = `<div class="bg-blue-50 p-5 rounded-[20px] flex justify-between items-center"><div><h3 class="font-extrabold text-lg text-gray-900">${found.area}</h3></div><div class="bg-white px-5 py-3 rounded-[14px] shadow-sm"><span class="text-2xl font-extrabold text-blue-600">${found.code}</span></div></div>`;
+      } else {
+        res.innerHTML = `<div class="bg-amber-50 p-5 rounded-[20px] text-center text-amber-800 font-bold">지역번호를 찾지 못했습니다.</div>`;
+      }
+      res.classList.remove('hidden');
+    };
 
-        loadQuestions();
-    </script>
+    // 파이어베이스 관리자 로그인 관련 함수
+    window.toggleAdminLoginModal = function() {
+      const modal = document.getElementById('adminModal');
+      if (!modal) return;
+      if (isAdmin && auth) {
+        signOut(auth).then(() => {
+          alert("관리자 로그아웃 되었습니다.");
+        });
+      } else {
+        modal.classList.toggle('hidden');
+      }
+    };
+
+    window.performAdminLogin = async function() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+      if (!email || !password) { alert('이메일과 비밀번호를 입력해주세요.'); return; }
+
+      try {
+        if (auth) {
+          await signInWithEmailAndPassword(auth, email, password);
+          toggleAdminLoginModal();
+          alert("관리자 로그인 성공!");
+        } else {
+          // 데모용 폴백
+          if (email === "admin@company.com" && password === "1234") {
+            isAdmin = true;
+            updateAdminUIState(true, email);
+            toggleAdminLoginModal();
+            renderQAList();
+            alert("관리자 로그인 성공!");
+          } else {
+            alert("계정 정보가 올바르지 않습니다.");
+          }
+        }
+      } catch (err) {
+        alert("로그인 실패: " + err.message);
+      }
+    };
+
+    function updateAdminUIState(status, userEmail = "") {
+      const btn = document.getElementById('adminToggleBtn');
+      if (!btn) return;
+      if (status) {
+        btn.innerText = `관리자 (${userEmail || 'ON'})`;
+        btn.className = "px-4 py-2 bg-blue-600 text-white font-bold rounded-[12px] text-xs";
+      } else {
+        btn.innerText = "관리자 로그인";
+        btn.className = "px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-[12px] text-xs";
+      }
+    }
+
+    window.submitQuestion = async function() {
+      const content = document.getElementById('qContent').value.trim();
+      if (!content) { alert('질문 내용을 입력해주세요.'); return; }
+
+      const newQ = {
+        content,
+        answer: "",
+        transfer: "",
+        date: new Date().toISOString().split('T')[0],
+        timestamp: Date.now()
+      };
+
+      try {
+        if (db) {
+          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), newQ);
+        } else {
+          allQuestions.push({ id: Date.now().toString(), ...newQ });
+          renderQAList();
+        }
+        document.getElementById('qContent').value = '';
+      } catch (err) {
+        alert('등록 중 오류가 발생했습니다.');
+      }
+    };
+
+    window.submitAnswer = async function(docId) {
+      const ansInput = document.getElementById(`ansInput_${docId}`);
+      if (!ansInput) return;
+      const ansText = ansInput.value.trim();
+      if (!ansText) { alert('답변 내용을 입력하세요.'); return; }
+      try {
+        if (db) {
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', docId), { answer: ansText });
+        }
+      } catch (e) {
+        alert('답변 저장 실패');
+      }
+    };
+
+    window.setTransferType = async function(docId, typeVal) {
+      try {
+        if (db) {
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', docId), { transfer: typeVal });
+        }
+      } catch (e) {
+        alert('이관 설정 실패');
+      }
+    };
+
+    function initFirestoreListener() {
+      if (!db) {
+        renderQAList();
+        renderFAQ();
+        return;
+      }
+      onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snapshot) => {
+        allQuestions = [];
+        snapshot.forEach(docSnap => {
+          allQuestions.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        allQuestions.sort((a, b) => b.timestamp - a.timestamp);
+        renderQAList();
+        renderFAQ();
+      }, (error) => {
+        console.log("Firestore error", error);
+      });
+    }
+
+    function renderQAList() {
+      const area = document.getElementById('qaListArea');
+      if (!area) return;
+      if (allQuestions.length === 0) {
+        area.innerHTML = `<div class="bg-white/60 p-6 rounded-[20px] text-center text-gray-400 font-medium text-sm">등록된 질문이 없습니다. 첫 질문을 남겨보세요!</div>`;
+        return;
+      }
+
+      let html = '';
+      allQuestions.forEach(item => {
+        const hasAnswer = Boolean(item.answer);
+        const statusBadge = hasAnswer 
+          ? `<span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">답변완료</span>` 
+          : `<span class="px-2.5 py-1 bg-gray-200 text-gray-600 rounded-full font-bold text-xs">답변대기</span>`;
+
+        const isTransfer = item.transfer === 'cx' || item.transfer === 'team';
+        const cardBorderClass = isTransfer ? 'border-2 border-red-500 shadow-md' : 'border border-gray-100';
+
+        let ansSection = '';
+        if (hasAnswer) {
+          ansSection = `<div class="mt-3 bg-blue-50/80 p-3.5 rounded-[14px] border border-blue-100 text-sm"><span class="font-bold text-blue-700 block mb-1">💡 관리자 답변</span><p class="text-gray-700">${item.answer}</p></div>`;
+        } else if (isAdmin) {
+          ansSection = `<div class="mt-3 flex gap-2"><input type="text" id="ansInput_${item.id}" placeholder="답변 입력..." class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-xs"><button onclick="window.submitAnswer('${item.id}')" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-[10px] text-xs">답변 등록</button></div>`;
+        } else {
+          ansSection = `<div class="mt-3 text-xs text-gray-400 font-medium">⏳ 답변 대기 중입니다.</div>`;
+        }
+
+        let transferControls = '';
+        if (isAdmin) {
+          const cxActive = item.transfer === 'cx' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+          const teamActive = item.transfer === 'team' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+          const noneActive = !item.transfer ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+
+          transferControls = `
+            <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+              <span class="font-bold text-gray-500">이관 설정:</span>
+              <div class="flex gap-1.5">
+                <button onclick="window.setTransferType('${item.id}', 'cx')" class="px-2.5 py-1 rounded-[8px] font-bold transition-all ${cxActive}">CX이관</button>
+                <button onclick="window.setTransferType('${item.id}', 'team')" class="px-2.5 py-1 rounded-[8px] font-bold transition-all ${teamActive}">타팀이관</button>
+                <button onclick="window.setTransferType('${item.id}', '')" class="px-2.5 py-1 rounded-[8px] font-bold transition-all ${noneActive}">정상</button>
+              </div>
+            </div>
+          `;
+        } else if (isTransfer) {
+          const transferLabel = item.transfer === 'cx' ? '🚨 [CX 이관 필요]' : '🚨 [타팀 이관 필요]';
+          transferControls = `<div class="mt-2 text-xs font-bold text-red-600">${transferLabel}</div>`;
+        }
+
+        html += `
+          <div class="glass-card p-5 rounded-[20px] space-y-2 ${cardBorderClass}">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-400">📅 ${item.date}</span>
+              ${statusBadge}
+            </div>
+            <p class="text-sm sm:text-base font-semibold text-gray-900 whitespace-pre-wrap">${item.content}</p>
+            ${ansSection}
+            ${transferControls}
+          </div>
+        `;
+      });
+      area.innerHTML = html;
+    }
+
+    function renderFAQ() {
+      const faqArea = document.getElementById('faqCategoryList');
+      if (!faqArea) return;
+      const keywords = ["가맹", "CPU", "지역", "이관", "오류"];
+      let faqHtml = '';
+
+      keywords.forEach(keyword => {
+        const count = allQuestions.filter(q => q.content.includes(keyword)).length;
+        faqHtml += `
+          <div class="bg-white/80 border border-gray-100 p-3.5 rounded-[16px] flex justify-between items-center">
+            <span class="font-bold text-sm text-gray-800"># ${keyword} 관련 문의</span>
+            <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-extrabold">${count}건</span>
+          </div>
+        `;
+      });
+      faqArea.innerHTML = faqHtml;
+    }
+
+    window.toggleAdminLoginModal = toggleAdminLoginModal;
+    window.performAdminLogin = performAdminLogin;
+    window.submitQuestion = submitQuestion;
+    window.submitAnswer = submitAnswer;
+    window.setTransferType = setTransferType;
+  </script>
 </body>
 </html>
