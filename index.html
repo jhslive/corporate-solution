@@ -576,6 +576,7 @@ const CPU_DATABASE = [
   { name: 'VIA Eden X2 U4200', score: 310 },
   { name: 'VIA QuadCore C4650', score: 850 }
 ];
+
     let cpuChart = null;
     let selectedCpus = [];
 
@@ -827,13 +828,31 @@ const CPU_DATABASE = [
       }
     };
 
-    // 이관 버튼 클릭 시 즉시 답변 완료(초록색 배지) 처리
+    // 관리자 직접 답변 등록 기능
+    window.submitAnswer = async function(docId) {
+      const ansInput = document.getElementById(`ansInput_${docId}`);
+      if (!ansInput) return;
+      const ansText = ansInput.value.trim();
+      if (!ansText) { alert('답변 내용을 입력하세요.'); return; }
+      try {
+        if (db) {
+          await updateDoc(doc(db, 'questions', docId), { answer: ansText });
+          alert("답변이 등록되었습니다.");
+        }
+      } catch (e) {
+        alert('답변 저장 실패: ' + e.message);
+      }
+    };
+
+    // 이관 버튼 클릭 설정
     window.setTransferType = async function(docId, typeVal) {
       try {
         if (db) {
           const updateData = { transfer: typeVal };
-          if (typeVal && typeVal !== "") {
-            updateData.answer = typeVal === 'cx' ? '[CX 이관 완료 처리됨]' : '[타팀 이관 완료 처리됨]';
+          if (typeVal === 'cx') {
+            updateData.answer = '[CX 이관 완료]';
+          } else if (typeVal === 'team') {
+            updateData.answer = '[타팀 이관 완료]';
           }
           await updateDoc(doc(db, 'questions', docId), updateData);
         }
@@ -932,7 +951,7 @@ const CPU_DATABASE = [
       });
     }
 
-    // 질문 목록 렌더링
+    // 질문 목록 렌더링 (상태별 테두리 적용)
     function renderQAList() {
       const area = document.getElementById('qaListArea');
       if (!area) return;
@@ -943,23 +962,44 @@ const CPU_DATABASE = [
 
       let html = '';
       allQuestions.forEach(item => {
-        const hasAnswer = Boolean(item.answer) || Boolean(item.transfer);
+        const hasAnswer = Boolean(item.answer);
         const statusBadge = hasAnswer 
           ? `<span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">답변완료</span>` 
           : `<span class="px-2.5 py-1 bg-gray-200 text-gray-600 rounded-full font-bold text-xs">답변대기</span>`;
 
-        const isTransfer = item.transfer === 'cx' || item.transfer === 'team';
-        const cardBorderClass = isTransfer ? 'border-2 border-red-500 shadow-md' : 'border border-gray-100';
+        // 테두리 색상 규칙 적용: CX이관=빨간색, 타팀이관=주황색, 일반답변완료=파란색, 기본=연한회색
+        let cardBorderClass = 'border border-gray-100';
+        if (item.transfer === 'cx') {
+          cardBorderClass = 'border-2 border-red-500 shadow-md';
+        } else if (item.transfer === 'team') {
+          cardBorderClass = 'border-2 border-amber-500 shadow-md';
+        } else if (hasAnswer) {
+          cardBorderClass = 'border-2 border-blue-500 shadow-md';
+        }
+
+        let ansSection = '';
+        if (hasAnswer) {
+          ansSection = `<div class="mt-3 bg-blue-50/80 p-3.5 rounded-[14px] border border-blue-100 text-sm"><span class="font-bold text-blue-700 block mb-1">💡 관리자 답변</span><p class="text-gray-700">${item.answer}</p></div>`;
+        } else if (isAdmin) {
+          ansSection = `
+            <div class="mt-3 flex gap-2">
+              <input type="text" id="ansInput_${item.id}" placeholder="직접 답변 입력..." class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-xs">
+              <button onclick="window.submitAnswer('${item.id}')" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-[10px] text-xs">답변 등록</button>
+            </div>
+          `;
+        } else {
+          ansSection = `<div class="mt-3 text-xs text-gray-400 font-medium">⏳ 답변 대기 중입니다.</div>`;
+        }
 
         let transferControls = '';
         if (isAdmin) {
           const cxActive = item.transfer === 'cx' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
-          const teamActive = item.transfer === 'team' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+          const teamActive = item.transfer === 'team' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
           const noneActive = !item.transfer ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
 
           transferControls = `
             <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-              <span class="font-bold text-gray-500">이관 설정 (클릭 시 즉시 답변 완료):</span>
+              <span class="font-bold text-gray-500">이관 설정:</span>
               <div class="flex gap-1.5">
                 <button onclick="window.setTransferType('${item.id}', 'cx')" class="px-2.5 py-1 rounded-[8px] font-bold transition-all ${cxActive}">CX이관</button>
                 <button onclick="window.setTransferType('${item.id}', 'team')" class="px-2.5 py-1 rounded-[8px] font-bold transition-all ${teamActive}">타팀이관</button>
@@ -967,9 +1007,10 @@ const CPU_DATABASE = [
               </div>
             </div>
           `;
-        } else if (isTransfer) {
-          const transferLabel = item.transfer === 'cx' ? '🚨 [CX 이관 완료]' : '🚨 [타팀 이관 완료]';
-          transferControls = `<div class="mt-2 text-xs font-bold text-red-600">${transferLabel}</div>`;
+        } else if (item.transfer === 'cx') {
+          transferControls = `<div class="mt-2 text-xs font-bold text-red-600">🚨 [CX 이관 완료]</div>`;
+        } else if (item.transfer === 'team') {
+          transferControls = `<div class="mt-2 text-xs font-bold text-amber-600">🚨 [타팀 이관 완료]</div>`;
         }
 
         html += `
@@ -979,6 +1020,7 @@ const CPU_DATABASE = [
               ${statusBadge}
             </div>
             <p class="text-sm sm:text-base font-semibold text-gray-900 whitespace-pre-wrap">${item.content}</p>
+            ${ansSection}
             ${transferControls}
           </div>
         `;
@@ -1041,6 +1083,7 @@ const CPU_DATABASE = [
     window.closeAdminModal = closeAdminModal;
     window.performAdminLogin = performAdminLogin;
     window.submitQuestion = submitQuestion;
+    window.submitAnswer = submitAnswer;
     window.setTransferType = setTransferType;
     window.saveFaqAnswer = saveFaqAnswer;
   </script>
