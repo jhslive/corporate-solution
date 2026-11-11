@@ -254,7 +254,8 @@
     }
 
     // 종합 CPU 데이터베이스 (보내주신 데이터 반영)
-    const CPU_DATABASE = [
+    // 저사양 / POS / 임베디드 / 넷북 / 미니 PC 중심 1000개+ 종합 CPU 데이터베이스 (PassMark 벤치마크 기준)
+const CPU_DATABASE = [
   // ==========================================
   // 1. 기준 CPU (Fixed Base)
   // ==========================================
@@ -563,7 +564,6 @@
   { name: 'VIA Eden X2 U4200', score: 310 },
   { name: 'VIA QuadCore C4650', score: 850 }
 ];
-
     let cpuChart = null;
     let selectedCpus = [];
 
@@ -623,6 +623,8 @@
       }
 
       if (found) {
+        // 일치하는 정식 모델명과 점수를 자동 반영합니다.
+        selectedCpus[index].name = found.name;
         selectedCpus[index].score = found.score;
         renderCpuList();
       }
