@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>사내 통합 조회 및 비교 솔루션</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
+<!-- ...jsdelivr.net/npm/chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -294,7 +286,12 @@
       { name: 'Apple M1', score: 14200 },
       { name: 'Apple M2', score: 15400 },
       { name: 'Apple M3 Pro', score: 30500 },
-      { name: 'Apple M3 Max', score: 41000 }
+      { name: 'Apple M3 Max', score: 41000 },
+      // 추가 확장 데이터베이스 항목들
+      { name: 'Intel Pentium Gold G6400', score: 4150 },
+      { name: 'Intel Celeron G5900', score: 2700 },
+      { name: 'AMD Ryzen 5 5600X', score: 22100 },
+      { name: 'Intel Core i7-14700K', score: 53000 }
     ];
 
     let cpuChart = null;
