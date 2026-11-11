@@ -1,4 +1,12 @@
-<!-- ...jsdelivr.net/npm/chart.js -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사내 통합 조회 및 비교 솔루션</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -287,7 +295,6 @@
       { name: 'Apple M2', score: 15400 },
       { name: 'Apple M3 Pro', score: 30500 },
       { name: 'Apple M3 Max', score: 41000 },
-      // 추가 확장 데이터베이스 항목들
       { name: 'Intel Pentium Gold G6400', score: 4150 },
       { name: 'Intel Celeron G5900', score: 2700 },
       { name: 'AMD Ryzen 5 5600X', score: 22100 },
@@ -299,6 +306,7 @@
 
     function renderCpuList() {
       const container = document.getElementById('cpuList');
+      if (!container) return;
       let html = `<div class="bg-blue-600 text-white rounded-[20px] p-5 shadow-sm flex flex-col justify-between"><div><span class="inline-block px-2.5 py-0.5 bg-white/20 rounded-full text-xs font-semibold mb-2">기준 (고정)</span><h3 class="font-bold text-lg">Intel Celeron J6412</h3></div><div class="mt-4 flex justify-between items-baseline"><span class="text-xs opacity-80">성능 점수</span><span class="text-2xl font-extrabold">3,000</span></div></div>`;
       
       selectedCpus.forEach((item, index) => {
@@ -317,8 +325,10 @@
         `;
       });
       container.innerHTML = html;
-      document.getElementById('cpuCount').innerText = selectedCpus.length + 1;
-      document.getElementById('addBtn').classList.toggle('hidden', selectedCpus.length >= 4);
+      const countSpan = document.getElementById('cpuCount');
+      if (countSpan) countSpan.innerText = selectedCpus.length + 1;
+      const addBtn = document.getElementById('addBtn');
+      if (addBtn) addBtn.classList.toggle('hidden', selectedCpus.length >= 4);
     }
 
     function addCpuInput() {
@@ -346,12 +356,14 @@
 
       if (nameVal.toLowerCase().includes('dojin')) {
         const popup = document.getElementById('easterEggPhoto');
-        popup.classList.remove('hidden');
-        popup.classList.add('easter-egg-active');
-        setTimeout(() => {
-          popup.classList.remove('easter-egg-active');
-          popup.classList.add('hidden');
-        }, 4000);
+        if (popup) {
+          popup.classList.remove('hidden');
+          popup.classList.add('easter-egg-active');
+          setTimeout(() => {
+            popup.classList.remove('easter-egg-active');
+            popup.classList.add('hidden');
+          }, 4000);
+        }
       }
     }
 
@@ -361,29 +373,54 @@
     }
 
     function updateChart() {
+      if (!cpuChart) return;
       cpuChart.data.labels = ['Intel Celeron J6412', ...selectedCpus.map(c => c.name || '미입력')];
       cpuChart.data.datasets[0].data = [3000, ...selectedCpus.map(c => c.score || 0)];
       cpuChart.update();
     }
 
-    // 전역 함수 바인딩
     window.addCpuInput = addCpuInput;
     window.removeCpu = removeCpu;
     window.updateCpuName = updateCpuName;
     window.updateCpuScore = updateCpuScore;
 
     window.onload = function() {
-      const ctx = document.getElementById('cpuChart').getContext('2d');
-      cpuChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: ['Intel Celeron J6412'], datasets: [{ label: 'PassMark 점수', data: [3000], backgroundColor: 'rgba(37, 99, 235, 0.8)', borderRadius: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
-      });
+      const canvasEl = document.getElementById('cpuChart');
+      if (canvasEl) {
+        const ctx = canvasEl.getContext('2d');
+        cpuChart = new Chart(ctx, {
+          type: 'bar',
+          data: { labels: ['Intel Celeron J6412'], datasets: [{ label: 'PassMark 점수', data: [3000], backgroundColor: 'rgba(37, 99, 235, 0.8)', borderRadius: 8 }] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+      }
       renderCpuList();
       initFirestoreListener();
     };
 
-    // 3. 지역번호 조회
+    // 카드사 가맹 조회 시뮬레이션
+    const CARD_COMPANIES = ["신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
+    window.searchCardAffiliate = function() {
+      const bizNo = document.getElementById('bizNoInput').value.trim();
+      const resultArea = document.getElementById('cardResultArea');
+      if (!bizNo) { alert('사업자등록번호를 입력해주세요.'); return; }
+      
+      let hash = 0;
+      for (let i = 0; i < bizNo.length; i++) hash = bizNo.charCodeAt(i) + ((hash << 5) - hash);
+      
+      let count = 0;
+      let html = '';
+      CARD_COMPANIES.forEach((card, idx) => {
+        const seed = Math.abs(hash + idx * 17) % 100;
+        let active = seed >= 30;
+        if (active) count++;
+        html += `<div class="bg-white/70 border border-gray-100 p-4 rounded-[16px] flex justify-between items-center"><div class="font-bold text-gray-800">${card}</div><div><span class="px-2.5 py-1 ${active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'} rounded-full text-xs font-bold">${active ? '가맹 승인' : '미가맹'}</span></div></div>`;
+      });
+      resultArea.innerHTML = `<div class="bg-blue-50 p-4 rounded-[16px] font-bold text-blue-900 text-sm">총 9개 중 ${count}개 카드사 가맹 확인</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${html}</div>`;
+      resultArea.classList.remove('hidden');
+    };
+
+    // 지역번호 조회
     const REGION_DB = [
       { keywords: ["서울", "강남", "서초", "송파", "마포", "종로"], code: "02", area: "서울지방" },
       { keywords: ["경기", "수원", "성남", "용인", "고양", "화성"], code: "031", area: "경기도" },
@@ -395,7 +432,7 @@
       { keywords: ["울산"], code: "052", area: "울산광역시" },
       { keywords: ["제주"], code: "064", area: "제주특별자치도" }
     ];
-    function searchRegionCode() {
+    window.searchRegionCode = function() {
       const q = document.getElementById('regionInput').value.trim();
       const res = document.getElementById('regionResultArea');
       if (!q) { alert('지역을 입력해주세요.'); return; }
@@ -406,15 +443,15 @@
         res.innerHTML = `<div class="bg-amber-50 p-5 rounded-[20px] text-center text-amber-800 font-bold">지역번호를 찾지 못했습니다.</div>`;
       }
       res.classList.remove('hidden');
-    }
+    };
 
-    // 4. 질문하기 및 파이어베이스 연동 로직
-    function toggleAdminMode() {
+    // 질문하기 및 파이어베이스 연동 로직
+    window.toggleAdminMode = function() {
       if (!isAdmin) {
         const pwd = prompt("관리자 비밀번호를 입력하세요 (기본: 1234):");
         if (pwd === "1234") {
           isAdmin = true;
-          document.getElementById('adminToggleBtn').innerText = "관리자 모드 해제 (ON)";
+          document.getElementById('adminToggleBtn').innerText = "관리자 모드 (ON)";
           document.getElementById('adminToggleBtn').className = "px-4 py-2 bg-blue-600 text-white font-bold rounded-[12px] text-xs";
           renderQAList();
           alert("관리자 권한이 활성화되었습니다.");
@@ -427,9 +464,9 @@
         document.getElementById('adminToggleBtn').className = "px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-[12px] text-xs";
         renderQAList();
       }
-    }
+    };
 
-    async function submitQuestion() {
+    window.submitQuestion = async function() {
       const writer = document.getElementById('qWriter').value.trim();
       const title = document.getElementById('qTitle').value.trim();
       const content = document.getElementById('qContent').value.trim();
@@ -456,10 +493,12 @@
       } catch (err) {
         alert('등록 중 오류가 발생했습니다.');
       }
-    }
+    };
 
-    async function submitAnswer(docId) {
-      const ansText = document.getElementById(`ansInput_${docId}`).value.trim();
+    window.submitAnswer = async function(docId) {
+      const ansInput = document.getElementById(`ansInput_${docId}`);
+      if (!ansInput) return;
+      const ansText = ansInput.value.trim();
       if (!ansText) { alert('답변 내용을 입력하세요.'); return; }
       try {
         if (db) {
@@ -469,10 +508,14 @@
       } catch (e) {
         alert('답변 저장 실패');
       }
-    }
+    };
 
     function initFirestoreListener() {
-      if (!db) return;
+      if (!db) {
+        renderQAList();
+        renderFAQ();
+        return;
+      }
       onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snapshot) => {
         allQuestions = [];
         snapshot.forEach(docSnap => {
@@ -488,6 +531,7 @@
 
     function renderQAList() {
       const area = document.getElementById('qaListArea');
+      if (!area) return;
       if (allQuestions.length === 0) {
         area.innerHTML = `<div class="bg-white/60 p-6 rounded-[20px] text-center text-gray-400 font-medium text-sm">등록된 질문이 없습니다. 첫 질문을 남겨보세요!</div>`;
         return;
@@ -499,7 +543,7 @@
         if (item.answer) {
           ansSection = `<div class="mt-3 bg-blue-50/80 p-3.5 rounded-[14px] border border-blue-100 text-sm"><span class="font-bold text-blue-700 block mb-1">💡 관리자 답변</span><p class="text-gray-700">${item.answer}</p></div>`;
         } else if (isAdmin) {
-          ansSection = `<div class="mt-3 flex gap-2"><input type="text" id="ansInput_${item.id}" placeholder="답변 입력..." class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-xs"><button onclick="submitAnswer('${item.id}')" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-[10px] text-xs">답변 등록</button></div>`;
+          ansSection = `<div class="mt-3 flex gap-2"><input type="text" id="ansInput_${item.id}" placeholder="답변 입력..." class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-xs"><button onclick="window.submitAnswer('${item.id}')" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-[10px] text-xs">답변 등록</button></div>`;
         } else {
           ansSection = `<div class="mt-3 text-xs text-amber-600 font-medium">⏳ 답변 대기 중입니다.</div>`;
         }
@@ -521,6 +565,7 @@
 
     function renderFAQ() {
       const faqArea = document.getElementById('faqCategoryList');
+      if (!faqArea) return;
       const keywords = ["가맹", "CPU", "지역", "오류", "로그인"];
       let faqHtml = '';
 
